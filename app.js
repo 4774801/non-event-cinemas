@@ -91,15 +91,68 @@
     });
   }
 
-  async function lookupPoster(title, year) {
-    if (!title) return "";
-    const cache = readPosterCache();
+  const movieDetailsCacheKey = key("movie_details_cache_v1");
+
+  function readMovieDetailsCache() {
+    try { return JSON.parse(localStorage.getItem(movieDetailsCacheKey)) || {}; }
+    catch { return {}; }
+  }
+
+  function normaliseMovieTitle(value="") {
+    return String(value)
+      .toLowerCase()
+      .replace(/\([^)]*\)/g, "")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
+
+  async function wikidataLabels(ids) {
+    const unique = [...new Set((ids || []).filter(Boolean))];
+    if (!unique.length) return {};
+
+    try {
+      const params = new URLSearchParams({
+        action: "wbgetentities",
+        ids: unique.join("|"),
+        props: "labels",
+        languages: "en",
+        format: "json",
+        origin: "*"
+      });
+      const response = await fetch(`https://www.wikidata.org/w/api.php?${params.toString()}`);
+      const data = await response.json();
+      const labels = {};
+      for (const id of unique) {
+        labels[id] = data?.entities?.[id]?.labels?.en?.value || "";
+      }
+      return labels;
+    } catch (error) {
+      console.warn("Wikidata label lookup failed:", error);
+      return {};
+    }
+  }
+
+  function claimEntityIds(entity, property, limit=10) {
+    return (entity?.claims?.[property] || [])
+      .map(claim => claim?.mainsnak?.datavalue?.value?.id)
+      .filter(Boolean)
+      .slice(0, limit);
+  }
+
+  async function lookupMovieDetails(title, year) {
+    if (!title) return { poster: "", director: "", cast: [] };
+
+    const cache = readMovieDetailsCache();
     const cacheId = `${String(title).toLowerCase()}|${year || ""}`;
-    if (Object.prototype.hasOwnProperty.call(cache, cacheId)) return cache[cacheId];
+    if (cache[cacheId]) return cache[cacheId];
 
-    let poster = "";
+    const details = {
+      poster: "",
+      director: "",
+      cast: []
+    };
 
-    // First choice: OMDb if you have added a free API key.
+    // First choice: OMDb, if a key is configured.
     if (cfg.OMDB_API_KEY) {
       try {
         const params = new URLSearchParams({
@@ -108,44 +161,90 @@
           type: "movie"
         });
         if (year) params.set("y", String(year));
+
         const response = await fetch(`https://www.omdbapi.com/?${params.toString()}`);
         const data = await response.json();
-        if (data.Response === "True" && data.Poster && data.Poster !== "N/A") {
-          poster = data.Poster;
+
+        if (data.Response === "True") {
+          if (data.Poster && data.Poster !== "N/A") details.poster = data.Poster;
+          if (data.Director && data.Director !== "N/A") details.director = data.Director;
+          if (data.Actors && data.Actors !== "N/A") {
+            details.cast = data.Actors.split(",").map(x => x.trim()).filter(Boolean).slice(0, 4);
+          }
         }
       } catch (error) {
-        console.warn("OMDb poster lookup failed:", error);
+        console.warn("OMDb movie lookup failed:", error);
       }
     }
 
-    // No-key fallback: ask Wikipedia for the lead image on the most likely film page.
-    if (!poster) {
+    // No-key fallback: Wikipedia for the film/poster, then Wikidata for people.
+    if (!details.director || !details.cast.length || !details.poster) {
       try {
         const query = `${title}${year ? ` ${year}` : ""} film`;
         const params = new URLSearchParams({
           action: "query",
           generator: "search",
           gsrsearch: query,
-          gsrlimit: "1",
-          prop: "pageimages",
+          gsrlimit: "5",
+          prop: "pageimages|pageprops",
           piprop: "thumbnail",
-          pithumbsize: "900",
+          pithumbsize: "700",
+          ppprop: "wikibase_item",
           format: "json",
           origin: "*"
         });
+
         const response = await fetch(`https://en.wikipedia.org/w/api.php?${params.toString()}`);
         const data = await response.json();
-        const page = data?.query?.pages ? Object.values(data.query.pages)[0] : null;
-        poster = page?.thumbnail?.source || "";
+        const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
+
+        const wanted = normaliseMovieTitle(title);
+        const page =
+          pages.find(p => normaliseMovieTitle(p.title).startsWith(wanted)) ||
+          pages.find(p => normaliseMovieTitle(p.title).includes(wanted)) ||
+          pages[0];
+
+        if (page) {
+          if (!details.poster) details.poster = page?.thumbnail?.source || "";
+
+          const qid = page?.pageprops?.wikibase_item;
+          if (qid && (!details.director || !details.cast.length)) {
+            const entityResponse = await fetch(`https://www.wikidata.org/wiki/Special:EntityData/${encodeURIComponent(qid)}.json`);
+            const entityData = await entityResponse.json();
+            const entity = entityData?.entities?.[qid];
+
+            const directorIds = claimEntityIds(entity, "P57", 3);
+            const castIds = claimEntityIds(entity, "P161", 4);
+            const labels = await wikidataLabels([...directorIds, ...castIds]);
+
+            if (!details.director) {
+              details.director = directorIds.map(id => labels[id]).filter(Boolean).join(", ");
+            }
+            if (!details.cast.length) {
+              details.cast = castIds.map(id => labels[id]).filter(Boolean).slice(0, 4);
+            }
+          }
+        }
       } catch (error) {
-        console.warn("Wikipedia poster lookup failed:", error);
+        console.warn("Wikipedia/Wikidata movie lookup failed:", error);
       }
     }
 
-    poster = await validateImageUrl(poster);
-    cache[cacheId] = poster;
-    localStorage.setItem(posterCacheKey, JSON.stringify(cache));
-    return poster;
+    details.poster = await validateImageUrl(details.poster);
+    cache[cacheId] = details;
+
+    try {
+      localStorage.setItem(movieDetailsCacheKey, JSON.stringify(cache));
+    } catch (error) {
+      console.warn("Could not cache movie details:", error);
+    }
+
+    return details;
+  }
+
+  async function lookupPoster(title, year) {
+    const details = await lookupMovieDetails(title, year);
+    return details.poster || "";
   }
 
   function esc(value="") {
@@ -515,19 +614,47 @@
     const rows = await getRecommendations();
     rows.sort((a,b) => (b.votes || 0) - (a.votes || 0));
     recCount.textContent = `${rows.length} suggestion${rows.length === 1 ? "" : "s"}`;
-    recommendationList.innerHTML = rows.length ? rows.map((r, i) => {
+
+    if (!rows.length) {
+      recommendationList.innerHTML = `<p class="empty">No suggestions yet. The programming committee is alarmingly quiet.</p>`;
+      return;
+    }
+
+    recommendationList.innerHTML = `<p class="rec-loading">Fetching film details…</p>`;
+
+    const cards = await Promise.all(rows.map(async (r, i) => {
       const voted = !isShared && (r.voters || []).includes(user);
+      const details = await lookupMovieDetails(r.title, r.year);
+      const poster = await validateImageUrl(r.poster_url) || details.poster || "";
+
+      const posterHtml = poster
+        ? `<img class="rec-poster" src="${esc(poster)}" alt="${esc(r.title)} poster" loading="lazy" referrerpolicy="no-referrer">`
+        : `<div class="rec-poster rec-poster-empty">NO POSTER</div>`;
+
+      const directorHtml = details.director
+        ? `<div class="rec-meta-row"><span>DIRECTOR</span>${esc(details.director)}</div>`
+        : "";
+
+      const castHtml = details.cast?.length
+        ? `<div class="rec-meta-row"><span>CAST</span>${esc(details.cast.join(", "))}</div>`
+        : "";
+
       return `
       <article class="recommendation-item">
         <div class="rec-rank">${String(i+1).padStart(2,"0")}</div>
-        <div>
+        ${posterHtml}
+        <div class="rec-copy">
           <div class="rec-title">${esc(r.title)}</div>
+          ${directorHtml}
+          ${castHtml}
           <div class="rec-reason">${esc(r.reason || "No pitch submitted. Bold strategy.")}</div>
           <div class="rec-by">NOMINATED BY ${esc(r.user_name || "ANON")}</div>
         </div>
         <button class="vote-btn ${voted ? "voted" : ""}" data-vote="${esc(r.id)}">▲ ${Number(r.votes || 0)}</button>
       </article>`;
-    }).join("") : `<p class="empty">No suggestions yet. The programming committee is alarmingly quiet.</p>`;
+    }));
+
+    recommendationList.innerHTML = cards.join("");
 
     document.querySelectorAll("[data-vote]").forEach(btn =>
       btn.addEventListener("click", () => voteRecommendation(btn.dataset.vote))
@@ -541,8 +668,8 @@
     const reason = $("#recReason").value.trim();
     if (!title) return;
     try {
-      const poster = await lookupPoster(title);
-      if (await addRecommendation(title, reason, poster)) {
+      const movie = await lookupMovieDetails(title);
+      if (await addRecommendation(title, reason, movie.poster)) {
         e.target.reset();
         showToast("Recommendation added.");
         await renderRecommendations();
