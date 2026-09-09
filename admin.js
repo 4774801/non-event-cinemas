@@ -163,6 +163,29 @@
     if (error) throw error;
   }
 
+
+  async function removeRecommendation(id) {
+    if (!id) return;
+
+    if (!isShared) {
+      const rows = read("recommendations", []);
+      write("recommendations", rows.filter(r => String(r.id) !== String(id)));
+      return;
+    }
+
+    // Remove any individual vote records first, then remove the recommendation.
+    let { error } = await sb.from("recommendation_votes")
+      .delete()
+      .eq("recommendation_id", id);
+    if (error) throw error;
+
+    ({ error } = await sb.from("recommendations")
+      .delete()
+      .eq("id", id));
+    if (error) throw error;
+  }
+
+
   async function chooseRecommendation(rec) {
     const rows = await getScreenings();
     const next = rows.filter(x => !x.is_past && !x.is_cancelled).sort((a,b)=>new Date(a.screening_at)-new Date(b.screening_at))[0];
@@ -271,13 +294,34 @@
           <strong>${i+1}. ${esc(r.title)}</strong>
           <span>${Number(r.votes||0)} vote${Number(r.votes||0)===1?"":"s"} · ${esc(r.user_name||"")}</span>
         </div>
-        <button class="admin-secondary" data-pick="${esc(r.id)}">Use film</button>
+        <div class="admin-rec-actions">
+          <button class="admin-secondary" data-pick="${esc(r.id)}">Use film</button>
+          <button class="admin-secondary admin-danger" data-remove-rec="${esc(r.id)}">Remove</button>
+        </div>
       </div>`).join("") || `<p class="empty">No recommendations.</p>`;
 
     document.querySelectorAll("[data-pick]").forEach(btn => {
       btn.addEventListener("click", () => {
         const rec = recs.find(r => String(r.id) === String(btn.dataset.pick));
         if (rec) chooseRecommendation(rec);
+      });
+    });
+
+    document.querySelectorAll("[data-remove-rec]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const rec = recs.find(r => String(r.id) === String(btn.dataset.removeRec));
+        if (!rec) return;
+
+        const ok = confirm(`Remove "${rec.title}" from recommendations?`);
+        if (!ok) return;
+
+        try {
+          await removeRecommendation(rec.id);
+          await render();
+        } catch (err) {
+          console.error(err);
+          alert("Could not remove recommendation. Supabase may need an admin delete policy.");
+        }
       });
     });
   }

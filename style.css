@@ -1529,3 +1529,22 @@ dialog .eyebrow {
     padding: 8px 0;
   }
 }
+
+
+/* --- Admin recommendation actions --- */
+.admin-rec-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-danger {
+  border-color: #8d2e29;
+  color: #8d2e29;
+}
+
+.admin-danger:hover {
+  background: #8d2e29;
+  color: #f7f3ea;
+}
