@@ -94,7 +94,7 @@
 
   const STOPWORDS = new Set(["the"]);
   const imageCacheKey = "ne_chaos_fake_poster_cache_v3";
-  const creditsCacheKey = "ne_chaos_movie_credits_cache_v2";
+  const creditsCacheKey = "ne_chaos_movie_credits_cache_v3";
 
   function readCache(key) {
     try { return JSON.parse(localStorage.getItem(key)) || {}; }
@@ -219,13 +219,57 @@
     return data?.query?.pages ? Object.values(data.query.pages) : [];
   }
 
+  function canonicalMovieTitle(title) {
+    const normalised = String(title || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+
+    const aliases = {
+      "basil the great mouse detective": "The Great Mouse Detective",
+      "basil great mouse detective": "The Great Mouse Detective"
+    };
+
+    return aliases[normalised] || String(title || "").trim();
+  }
+
+  async function exactWikipediaFilmPage(title) {
+    try {
+      const params = new URLSearchParams({
+        action: "query",
+        titles: title,
+        prop: "pageprops",
+        ppprop: "wikibase_item",
+        redirects: "1",
+        format: "json",
+        origin: "*"
+      });
+
+      const response = await fetch(`https://en.wikipedia.org/w/api.php?${params}`);
+      const data = await response.json();
+      const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
+      return pages.find(page => !page?.missing && page?.pageprops?.wikibase_item) || null;
+    } catch (error) {
+      console.warn("Exact Wikipedia title lookup failed:", error);
+      return null;
+    }
+  }
+
   async function findBestFilmPage(title) {
+    const canonical = canonicalMovieTitle(title);
+
+    // If we recognise a common near-miss, try the canonical Wikipedia
+    // article directly before any fuzzy search.
+    if (canonical && canonical.toLowerCase() !== String(title || "").trim().toLowerCase()) {
+      const exact = await exactWikipediaFilmPage(canonical);
+      if (exact) return exact;
+    }
+
     const words = String(title || "").trim().split(/\s+/).filter(Boolean);
 
-    // Try the submitted title first, then progressively remove an extra
-    // leading word. This catches things like:
-    // "Basil the Great Mouse Detective" -> "The Great Mouse Detective".
-    const searches = [title];
+    // Try the canonical title, submitted title, then progressively remove
+    // extra leading words.
+    const searches = [...new Set([canonical, title].filter(Boolean))];
 
     if (words.length >= 4) {
       searches.push(words.slice(1).join(" "));
@@ -448,7 +492,7 @@
     html,
     body {
       background-color: #0b1760 !important;
-      background-image: url("./lighthouse-tile.png") !important;
+      background-image: url("./background-tile.png") !important;
       background-repeat: repeat !important;
       background-size: 100px auto !important;
       background-position: top left !important;
