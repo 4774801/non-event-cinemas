@@ -1640,3 +1640,52 @@ dialog .eyebrow {
     margin: 6px 0 1px;
   }
 }
+
+
+/* --- Mobile navigation restored --- */
+@media (max-width: 900px) {
+  .header {
+    grid-template-columns: 1fr auto;
+    gap: 10px 14px;
+    padding-bottom: 10px;
+  }
+
+  .brand {
+    grid-column: 1;
+  }
+
+  .login-btn {
+    grid-column: 2;
+  }
+
+  .nav {
+    grid-column: 1 / -1;
+    display: flex !important;
+    width: 100%;
+    gap: 0;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 9px;
+    border-top: 1px solid var(--line);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    font-size: 10px;
+    letter-spacing: .045em;
+  }
+}
+
+@media (max-width: 420px) {
+  .nav a {
+    font-size: 9px;
+    letter-spacing: .02em;
+  }
+}
