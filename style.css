@@ -1689,3 +1689,64 @@ dialog .eyebrow {
     letter-spacing: .02em;
   }
 }
+
+
+/* --- Compact single-row mobile header --- */
+@media (max-width: 900px) {
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+  }
+
+  .brand {
+    display: none;
+  }
+
+  .nav {
+    order: 1;
+    display: flex !important;
+    flex: 1 1 auto;
+    width: auto;
+    gap: 18px;
+    justify-content: flex-start;
+    padding: 0;
+    border-top: 0;
+    overflow: visible;
+  }
+
+  .nav-now,
+  .nav-past {
+    display: none !important;
+  }
+
+  .nav a {
+    font-size: 10px;
+    letter-spacing: .035em;
+  }
+
+  .login-btn {
+    order: 2;
+    flex: 0 0 auto;
+    margin-left: auto;
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .header {
+    gap: 10px;
+    padding-inline: 12px;
+  }
+
+  .nav {
+    gap: 14px;
+  }
+
+  .nav a,
+  .login-btn {
+    font-size: 9px;
+  }
+}
