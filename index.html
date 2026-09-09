@@ -39,14 +39,17 @@
     }
 
     .recommendation-item .vote-btn {
-      width: auto !important;
-      min-width: 0 !important;
-      min-height: 0 !important;
-      height: max-content;
-      padding: 3px 5px !important;
+      width: 54px !important;
+      min-width: 54px !important;
+      height: 70px !important;
+      min-height: 70px !important;
+      box-sizing: border-box;
+      padding: 0 !important;
       align-self: center !important;
-      justify-self: end !important;
-      font-size: 9px !important;
+      justify-self: stretch !important;
+      display: grid;
+      place-items: center;
+      font-size: 11px !important;
       line-height: 1 !important;
       white-space: nowrap;
     }
@@ -77,10 +80,13 @@
       .recommendation-item .vote-btn {
         grid-column: 1 !important;
         grid-row: 2 !important;
-        width: 34px !important;
-        justify-self: center !important;
+        width: 48px !important;
+        min-width: 48px !important;
+        height: 70px !important;
+        min-height: 70px !important;
+        justify-self: stretch !important;
         align-self: start !important;
-        padding: 3px 2px !important;
+        padding: 0 !important;
       }
     }
   </style>
@@ -291,7 +297,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
   <script src="./app.js"></script>
-  <script src="./chaos-recommendations.js?v=20260909-2"></script>
+  <script src="./chaos-recommendations.js?v=20260909-3"></script>
   <script src="./chaos2000-state.js?v=20260909-prelaunch1"></script>
 </body>
 </html>
