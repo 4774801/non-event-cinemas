@@ -1,82 +1,110 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#19130f" />
-  <meta name="description" content="Non Event Cinemas statistics and film ratings." />
-  <title>Stats · Non Event Cinemas</title>
-<link rel="stylesheet" href="./style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b2a6f">
+  <title>STATS!!! · Non Event Cinemas</title>
+  <link rel="stylesheet" href="./chaos2000.css?v=20260909-prelaunch1">
+
+  <style>
+    @media (max-width: 820px) {
+      .stats-masthead { grid-template-columns: 104px minmax(0,1fr) !important; }
+      .stats-title-panel { min-width: 0; padding: 20px 14px !important; }
+      .stats-main, .stats-window, .window-body { min-width: 0; }
+      .attendance-podium { grid-template-columns: 1fr !important; }
+      .record-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+      .film-ranking { min-width: 0; }
+    }
+
+    @media (max-width: 520px) {
+      .stats-masthead { grid-template-columns: 88px minmax(0,1fr) !important; }
+      .stats-side-menu { padding: 4px !important; }
+      .stats-side-menu .side-nav a { font-size: 7px !important; padding: 6px 2px !important; }
+      .stats-title-panel { padding: 16px 10px !important; }
+      .stats-title-panel h1 { font-size: 13vw !important; letter-spacing: -2px !important; }
+      .record-grid { grid-template-columns: 1fr !important; }
+      .film-rank-row {
+        grid-template-columns: 42px 54px minmax(0,1fr) !important;
+        gap: 7px !important;
+      }
+      .film-rank-score {
+        grid-column: 3 !important;
+        width: max-content !important;
+      }
+    }
+  </style>
+
 </head>
-<body>
-<div class="noise" aria-hidden="true"></div>
 
-  <header class="header">
-    <a class="brand" href="./index.html">
-      <span class="brand-mark">NE</span>
-      <span>
-        <strong>NON EVENT</strong>
-        <small>CINEMAS</small>
-      </span>
-    </a>
+<body class="stats-chaos-page">
+  <div class="top-warning">
+    <marquee scrollamount="5">
+      ★ NON EVENT CINEMAS RECORD BOOK ★ FIRST SCREENING 1 OCT 2026 ★ NOTHING TO RANK YET!!! ★
+    </marquee>
+  </div>
 
-    <nav class="nav">
-      <a href="./index.html#screenings">Now Showing</a>
-      <a href="./index.html#recommendations">Suggestions</a>
-      <a href="./index.html#archive">Past Films</a>
-      <a href="./stats.html">Stats</a>
-    </nav>
+  <div class="page-shell stats-shell">
+    <div class="fake-toolbar">
+      <a class="toolbar-link" href="./index.html">◀ HOME</a>
+      <button type="button" onclick="location.reload()">⟳ REFRESH</button>
+      <div class="fake-address">http://www.noneventcinemas.com/stats/records.html</div>
+    </div>
 
-    <a class="login-btn stats-home" href="./index.html">← Programme</a>
-  </header>
+    <header class="stats-masthead">
+      <aside class="stats-side-menu">
+        <div class="side-title">NAVIGATION</div>
+        <nav class="side-nav">
+          <a href="./index.html#screenings">► NOW SHOWING</a>
+          <a href="./index.html#recommendations">► SUGGESTIONS</a>
+          <a href="./index.html#archive">► PAST FILMS</a>
+          <a class="current-link" href="./stats.html">► STATS!!!</a>
+        </nav>
+      </aside>
 
-  <main>
-    <section class="stats-hero">
-      <p class="eyebrow">NON EVENT RECORD BOOK</p>
-      <h1>Stats.</h1>
-      
-    </section>
-
-    <section class="section stats-section">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">REGULARS</p>
-          <h2>Top attendees</h2>
+      <div class="stats-title-panel">
+        <div class="sparkle-row stats-sparkle">
+          <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/AnimatedStar.gif" alt="">
+          <span>THE OFFICIAL RECORD BOOK</span>
+          <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/AnimatedStar.gif" alt="">
         </div>
-        
+        <h1>STATS<span>.HTML</span></h1>
+        <p>There are no completed screenings yet. The database opens for business after 1 October.</p>
       </div>
-      <div id="attendancePodium" class="attendance-podium"></div>
-    </section>
+    </header>
 
-    <section class="section alt-section stats-section">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">CINEMA RECORDS</p>
-          <h2>By the numbers</h2>
+    <div class="rainbow-divider stats-rainbow"></div>
+
+    <main class="stats-main">
+      <section class="chaos-window stats-window">
+        <div class="window-title"><span>ATTENDANCE_LEAGUE.TXT</span><span class="window-controls">_ □ ×</span></div>
+        <div class="window-body">
+          <div class="stats-section-heading"><div><div class="retro-kicker">REGULARS</div><h2>TOP ATTENDEES</h2></div></div>
+          <div id="attendancePodium" class="attendance-podium"></div>
         </div>
-      </div>
-      <div id="recordGrid" class="record-grid"></div>
-    </section>
+      </section>
 
-    <section class="section stats-section">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">CRITICAL CONSENSUS</p>
-          <h2>Every film, ranked</h2>
+      <section class="chaos-window stats-window">
+        <div class="window-title teal-title"><span>CINEMA_RECORDS.XLS</span><span class="window-controls">_ □ ×</span></div>
+        <div class="window-body">
+          <div class="stats-section-heading"><div><div class="retro-kicker">DATABASE TOTALS</div><h2>BY THE NUMBERS</h2></div></div>
+          <div id="recordGrid" class="record-grid"></div>
         </div>
-        
-      </div>
-      <div id="filmRanking" class="film-ranking"></div>
-    </section>
-  </main>
+      </section>
 
-  <footer>
-    <span>NON EVENT CINEMAS</span>
-    <span>NOT AFFILIATED WITH EVENT CINEMAS</span>
-  </footer>
+      <section class="chaos-window stats-window">
+        <div class="window-title purple"><span>FILM_RANKINGS.DAT</span><span class="window-controls">_ □ ×</span></div>
+        <div class="window-body">
+          <div class="stats-section-heading"><div><div class="retro-kicker">CRITICAL CONSENSUS</div><h2>EVERY FILM, RANKED</h2></div></div>
+          <div id="filmRanking" class="film-ranking"></div>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
   <script src="./stats.js"></script>
+  <script src="./chaos2000-stats-state.js?v=20260909-prelaunch1"></script>
 </body>
 </html>
