@@ -1790,3 +1790,16 @@ dialog .eyebrow {
     align-self: start;
   }
 }
+
+
+/* --- Mobile vote box exact rank-column width --- */
+@media (max-width: 620px) {
+  .vote-btn {
+    width: 38px !important;
+    box-sizing: border-box;
+    justify-self: stretch;
+    text-align: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
