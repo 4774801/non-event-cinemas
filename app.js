@@ -91,7 +91,7 @@
     });
   }
 
-  const movieDetailsCacheKey = key("movie_details_cache_v1");
+  const movieDetailsCacheKey = key("movie_details_cache_v2");
 
   function readMovieDetailsCache() {
     try { return JSON.parse(localStorage.getItem(movieDetailsCacheKey)) || {}; }
@@ -169,7 +169,7 @@
           if (data.Poster && data.Poster !== "N/A") details.poster = data.Poster;
           if (data.Director && data.Director !== "N/A") details.director = data.Director;
           if (data.Actors && data.Actors !== "N/A") {
-            details.cast = data.Actors.split(",").map(x => x.trim()).filter(Boolean).slice(0, 4);
+            details.cast = data.Actors.split(",").map(x => x.trim()).filter(Boolean).slice(0, 2);
           }
         }
       } catch (error) {
@@ -205,7 +205,27 @@
           pages[0];
 
         if (page) {
-          if (!details.poster) details.poster = page?.thumbnail?.source || "";
+          if (!details.poster) {
+            details.poster = page?.thumbnail?.source || "";
+
+            // Wikipedia REST summary often exposes the article's lead/poster image
+            // even when pageimages search does not.
+            try {
+              const summaryResponse = await fetch(
+                `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(page.title)}`
+              );
+              if (summaryResponse.ok) {
+                const summary = await summaryResponse.json();
+                details.poster =
+                  summary?.originalimage?.source ||
+                  summary?.thumbnail?.source ||
+                  details.poster ||
+                  "";
+              }
+            } catch (error) {
+              console.warn("Wikipedia summary image lookup failed:", error);
+            }
+          }
 
           const qid = page?.pageprops?.wikibase_item;
           if (qid && (!details.director || !details.cast.length)) {
@@ -214,14 +234,14 @@
             const entity = entityData?.entities?.[qid];
 
             const directorIds = claimEntityIds(entity, "P57", 3);
-            const castIds = claimEntityIds(entity, "P161", 4);
+            const castIds = claimEntityIds(entity, "P161", 2);
             const labels = await wikidataLabels([...directorIds, ...castIds]);
 
             if (!details.director) {
               details.director = directorIds.map(id => labels[id]).filter(Boolean).join(", ");
             }
             if (!details.cast.length) {
-              details.cast = castIds.map(id => labels[id]).filter(Boolean).slice(0, 4);
+              details.cast = castIds.map(id => labels[id]).filter(Boolean).slice(0, 2);
             }
           }
         }
@@ -230,7 +250,18 @@
       }
     }
 
-    details.poster = await validateImageUrl(details.poster);
+    const rawPoster = details.poster || "";
+    const validatedPoster = await validateImageUrl(rawPoster);
+    if (validatedPoster) {
+      details.poster = validatedPoster;
+    } else if (/^https:\/\/upload\.wikimedia\.org\//i.test(rawPoster)) {
+      // Wikimedia images are safe to display directly; browser validation can
+      // sometimes fail because of hotlink/referrer behaviour.
+      details.poster = rawPoster;
+    } else {
+      details.poster = "";
+    }
+
     cache[cacheId] = details;
 
     try {
@@ -636,7 +667,7 @@
         : "";
 
       const castHtml = details.cast?.length
-        ? `<div class="rec-meta-row"><span>CAST</span>${esc(details.cast.join(", "))}</div>`
+        ? `<div class="rec-meta-row"><span>CAST</span>${esc(details.cast.slice(0, 2).join(", "))}</div>`
         : "";
 
       return `
