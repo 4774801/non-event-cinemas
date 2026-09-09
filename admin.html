@@ -5,500 +5,209 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#000000" />
   <title>KEEP OUT // NON EVENT ADMIN</title>
-
   <style>
     :root {
-      --green: #00ff41;
-      --green2: #00c832;
-      --dim: #008f27;
-      --dark: #001407;
-      --black: #000;
-      --danger: #ff3030;
-      --line: rgba(0,255,65,.32);
+      --green:#00ff41; --green2:#00c832; --dim:#008f27;
+      --black:#000; --danger:#ff3030;
     }
-
-    * { box-sizing: border-box; }
-
-    html {
-      background: #000;
-      color-scheme: dark;
-    }
-
+    * { box-sizing:border-box; }
+    html { background:#000; color-scheme:dark; }
     body {
-      margin: 0;
-      min-height: 100vh;
-      overflow-x: hidden;
-      color: var(--green);
-      background:
-        radial-gradient(circle at 50% -20%, rgba(0,255,65,.12), transparent 42%),
-        #000;
-      font-family: "Courier New", Courier, monospace;
-      font-size: 14px;
+      margin:0; min-height:100vh; overflow-x:hidden;
+      color:var(--green); background:#000;
+      font-family:"Courier New", Courier, monospace;
+      font-size:14px;
     }
-
     body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: 20;
-      pointer-events: none;
-      background: repeating-linear-gradient(
-        to bottom,
-        rgba(255,255,255,0) 0px,
-        rgba(255,255,255,0) 2px,
-        rgba(0,0,0,.22) 3px,
-        rgba(0,0,0,.22) 4px
-      );
-      mix-blend-mode: multiply;
+      content:""; position:fixed; inset:0; z-index:50; pointer-events:none;
+      background:repeating-linear-gradient(to bottom,transparent 0 2px,rgba(0,0,0,.24) 3px 4px);
     }
-
     #matrixRain {
-      position: fixed;
-      inset: 0;
-      z-index: -2;
-      width: 100%;
-      height: 100%;
-      opacity: .22;
+      position:fixed; inset:0; z-index:-2; width:100%; height:100%; opacity:.22;
     }
-
-    .matrix-vignette {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-      background: radial-gradient(circle, transparent 30%, rgba(0,0,0,.78) 100%);
+    .vignette {
+      position:fixed; inset:0; z-index:-1; pointer-events:none;
+      background:radial-gradient(circle,transparent 28%,rgba(0,0,0,.82) 100%);
     }
-
-    a { color: var(--green); }
-
-    button,
-    input {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    [hidden] { display: none !important; }
+    [hidden] { display:none !important; }
+    a { color:var(--green); }
+    button,input { font:inherit; }
+    button { cursor:pointer; }
 
     .terminal-topbar {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      min-height: 43px;
-      padding: 8px 16px;
-      color: var(--green);
-      background: rgba(0,0,0,.96);
-      border-bottom: 1px solid var(--green2);
-      box-shadow: 0 0 20px rgba(0,255,65,.14);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      font-size: 11px;
+      position:sticky; top:0; z-index:20;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:8px 14px; min-height:42px;
+      background:rgba(0,0,0,.96); border-bottom:1px solid var(--green2);
+      font-size:11px; text-transform:uppercase; letter-spacing:.08em;
     }
-
-    .terminal-topbar .path {
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
     .terminal-topbar a {
-      flex: 0 0 auto;
-      padding: 5px 8px;
-      text-decoration: none;
-      border: 1px solid var(--green);
+      text-decoration:none; border:1px solid var(--green); padding:5px 8px;
     }
+    .terminal-topbar a:hover { color:#000; background:var(--green); }
 
-    .terminal-topbar a:hover {
-      color: #000;
-      background: var(--green);
-    }
-
-    .warning-marquee {
-      padding: 5px 0;
-      color: #000;
-      background: var(--green);
-      border-bottom: 2px solid #003c10;
-      font-weight: 900;
-      text-transform: uppercase;
+    .warning {
+      padding:5px 0; color:#000; background:var(--green);
+      border-bottom:2px solid #004415; font-weight:900;
     }
 
     .admin-page {
-      width: min(1080px, calc(100% - 24px));
-      margin: 28px auto 70px;
+      width:min(1080px,calc(100% - 24px));
+      margin:26px auto 70px;
     }
-
     .keep-out {
-      position: relative;
-      margin-bottom: 24px;
-      padding: 20px;
-      overflow: hidden;
-      color: var(--green);
-      background: rgba(0,12,3,.90);
-      border: 1px solid var(--green);
-      box-shadow:
-        inset 0 0 35px rgba(0,255,65,.05),
-        0 0 25px rgba(0,255,65,.10);
-      text-align: center;
+      margin-bottom:20px; padding:20px; text-align:center;
+      background:rgba(0,12,3,.92); border:1px solid var(--green);
+      box-shadow:0 0 24px rgba(0,255,65,.12), inset 0 0 30px rgba(0,255,65,.04);
     }
-
-    .keep-out::before,
-    .keep-out::after {
-      content: "01001110 01001111 01001110 00100000 01000101 01010110 01000101 01001110 01010100";
-      position: absolute;
-      left: 0;
-      width: 100%;
-      color: rgba(0,255,65,.12);
-      font-size: 10px;
-      white-space: nowrap;
-      overflow: hidden;
-    }
-
-    .keep-out::before { top: 7px; }
-    .keep-out::after { bottom: 7px; }
-
     .keep-out small {
-      display: block;
-      margin-bottom: 5px;
-      color: var(--dim);
-      letter-spacing: .25em;
-      text-transform: uppercase;
+      display:block; margin-bottom:4px; color:var(--dim);
+      letter-spacing:.24em; text-transform:uppercase;
     }
-
     .keep-out h1 {
-      margin: 0;
-      color: var(--green);
-      font: 900 clamp(46px, 10vw, 110px)/.83 Impact, "Arial Black", sans-serif;
-      letter-spacing: .04em;
-      text-shadow:
-        3px 0 0 rgba(0,255,65,.22),
-        -3px 0 0 rgba(0,255,65,.10),
-        0 0 18px rgba(0,255,65,.30);
-      animation: glitch 3.5s steps(1) infinite;
+      margin:0; font:900 clamp(48px,10vw,110px)/.82 Impact,"Arial Black",sans-serif;
+      letter-spacing:.04em; text-shadow:0 0 18px rgba(0,255,65,.35);
     }
-
     .keep-out p {
-      margin: 12px 0 0;
-      color: #7cff9e;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-    }
-
-    @keyframes glitch {
-      0%, 92%, 100% { transform: none; }
-      93% { transform: translateX(2px); }
-      94% { transform: translateX(-3px); }
-      95% { transform: translateX(1px); }
+      margin:12px 0 0; color:#77ff99; font-size:11px;
+      text-transform:uppercase; letter-spacing:.11em;
     }
 
     .admin-card {
-      padding: 16px;
-      color: var(--green);
-      background: rgba(0,12,3,.92);
-      border: 1px solid var(--green2);
-      box-shadow:
-        inset 0 0 22px rgba(0,255,65,.035),
-        0 0 12px rgba(0,255,65,.07);
+      padding:16px; color:var(--green); background:rgba(0,12,3,.94);
+      border:1px solid var(--green2);
+      box-shadow:inset 0 0 20px rgba(0,255,65,.03);
     }
-
     .admin-card::before {
-      content: "> SECURE_TERMINAL_NODE";
-      display: block;
-      margin: -16px -16px 15px;
-      padding: 6px 9px;
-      color: #000;
-      background: var(--green2);
-      font-size: 10px;
-      font-weight: bold;
-      letter-spacing: .08em;
+      content:"> SECURE_TERMINAL_NODE";
+      display:block; margin:-16px -16px 15px; padding:6px 9px;
+      color:#000; background:var(--green2); font-size:10px; font-weight:bold;
     }
-
-    .admin-login {
-      width: min(520px, 100%);
-      margin: 0 auto;
-    }
-
     .eyebrow {
-      margin: 0 0 4px;
-      color: var(--dim);
-      font-size: 10px;
-      letter-spacing: .15em;
-      text-transform: uppercase;
+      margin:0 0 4px; color:var(--dim); font-size:10px;
+      letter-spacing:.14em; text-transform:uppercase;
     }
+    h1,h2 { text-transform:uppercase; letter-spacing:.04em; }
+    .admin-card h1 { margin:6px 0 16px; font-size:31px; }
+    .admin-card h2 { margin:0 0 16px; font-size:17px; color:#8dffa9; }
 
-    h1, h2 {
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-
-    .admin-card h1 {
-      margin: 6px 0 16px;
-      font-size: 31px;
-    }
-
-    .admin-card h2 {
-      margin: 0 0 16px;
-      font-size: 17px;
-      color: #8dffa9;
-    }
-
-    .admin-form {
-      display: grid;
-      gap: 12px;
-    }
-
+    .admin-form { display:grid; gap:12px; }
     .admin-form label {
-      display: grid;
-      gap: 5px;
-      color: #72d889;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
+      display:grid; gap:5px; color:#72d889; font-size:10px;
+      text-transform:uppercase; letter-spacing:.08em;
     }
-
     .admin-form input {
-      width: 100%;
-      min-height: 39px;
-      padding: 8px 9px;
-      color: var(--green);
-      background: #000;
-      border: 1px solid #007d20;
-      border-radius: 0;
-      outline: none;
-      caret-color: var(--green);
-      box-shadow: inset 0 0 10px rgba(0,255,65,.035);
+      width:100%; min-height:39px; padding:8px 9px;
+      color:var(--green); background:#000; border:1px solid #007d20;
+      border-radius:0; outline:none; caret-color:var(--green);
     }
+    .admin-form input:focus { border-color:var(--green); box-shadow:0 0 8px rgba(0,255,65,.22); }
 
-    .admin-form input:focus {
-      border-color: var(--green);
-      box-shadow: 0 0 8px rgba(0,255,65,.22);
+    .primary-btn,.admin-secondary {
+      min-height:35px; padding:7px 11px; border-radius:0;
+      text-transform:uppercase; font-weight:bold; font-size:10px;
+      letter-spacing:.04em;
     }
-
-    .admin-form input::placeholder {
-      color: #276c38;
-    }
-
-    .primary-btn,
-    .admin-secondary {
-      min-height: 35px;
-      padding: 7px 11px;
-      color: var(--green);
-      background: #001b08;
-      border: 1px solid var(--green2);
-      border-radius: 0;
-      text-transform: uppercase;
-      font-weight: bold;
-      font-size: 10px;
-      letter-spacing: .04em;
-    }
-
     .primary-btn {
-      color: #000;
-      background: var(--green);
-      border-color: var(--green);
+      color:#000; background:var(--green); border:1px solid var(--green);
     }
-
-    .primary-btn:hover {
-      background: #a6ffb9;
+    .admin-secondary {
+      color:var(--green); background:#001b08; border:1px solid var(--green2);
     }
-
-    .admin-secondary:hover {
-      color: #000;
-      background: var(--green);
-    }
-
     .admin-danger {
-      color: #ff6a6a !important;
-      border-color: #b72525 !important;
-      background: #210000 !important;
+      color:#ff6a6a !important; border-color:#b72525 !important; background:#210000 !important;
     }
-
-    .admin-danger:hover {
-      color: #fff !important;
-      background: #b00000 !important;
-    }
-
-    .admin-note {
-      color: #4fae65;
-      font-size: 10px;
-      line-height: 1.5;
-    }
-
-    #adminLoginError {
-      color: #ff4545;
-    }
+    .admin-note { color:#4fae65; font-size:10px; line-height:1.5; }
+    #adminLoginError { color:#ff4545; }
 
     .admin-topline {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: flex-start;
-      margin-bottom: 13px;
-      padding: 14px;
-      background: rgba(0,8,2,.9);
-      border: 1px solid #00691b;
+      display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
+      margin-bottom:13px; padding:14px; background:rgba(0,8,2,.9); border:1px solid #00691b;
     }
-
-    .admin-topline h1 {
-      margin: 2px 0 0;
-      font-size: clamp(29px, 5vw, 54px);
-      line-height: .95;
-      color: var(--green);
+    .admin-topline h1 { margin:2px 0 0; font-size:clamp(29px,5vw,54px); line-height:.95; }
+    #adminModeNotice,.vote-status {
+      margin-bottom:14px; padding:8px 10px; color:#8aff9f;
+      background:#001307; border:1px dashed #008a25; font-size:10px; text-transform:uppercase;
     }
-
-    #adminModeNotice,
-    .vote-status {
-      margin-bottom: 14px;
-      padding: 8px 10px;
-      color: #8aff9f;
-      background: #001307;
-      border: 1px dashed #008a25;
-      font-size: 10px;
-      text-transform: uppercase;
-    }
-
     .admin-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr);
-      gap: 14px;
-      align-items: start;
+      display:grid; grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);
+      gap:14px; align-items:start;
     }
-
-    .admin-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      margin-top: 3px;
-    }
-
-    .admin-list {
-      display: grid;
-      gap: 7px;
-    }
-
+    .admin-actions { display:flex; flex-wrap:wrap; gap:7px; margin-top:3px; }
+    .admin-list { display:grid; gap:7px; }
     .admin-rec {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: center;
-      min-width: 0;
-      padding: 9px;
-      color: var(--green);
-      background: #000;
-      border: 1px solid #006d1c;
+      display:flex; justify-content:space-between; gap:12px; align-items:center;
+      min-width:0; padding:9px; background:#000; border:1px solid #006d1c;
+    }
+    .admin-rec > div:first-child { min-width:0; }
+    .admin-rec strong { display:block; overflow-wrap:anywhere; color:#9dffb2; }
+    .admin-rec span { display:block; margin-top:3px; color:#498d59; font-size:9px; }
+    .admin-rec-actions { display:flex; gap:6px; flex-wrap:wrap; flex:0 0 auto; }
+    .empty { padding:12px; color:#386f45; background:#000; border:1px dashed #005216; font-size:10px; }
+
+    /* Always-visible local password gate */
+    #localPasswordGate {
+      position:fixed; inset:0; z-index:1000;
+      display:grid; place-items:center; padding:18px;
+      background:rgba(0,0,0,.96);
+    }
+    #localPasswordGate.unlocked { display:none; }
+    .gate-card {
+      width:min(520px,100%); padding:18px;
+      background:#000; border:1px solid var(--green);
+      box-shadow:0 0 40px rgba(0,255,65,.18), inset 0 0 25px rgba(0,255,65,.04);
+    }
+    .gate-warning {
+      margin:0 0 12px; color:var(--green);
+      font:900 clamp(38px,10vw,78px)/.9 Impact,"Arial Black",sans-serif;
+      text-align:center; letter-spacing:.05em;
+    }
+    .gate-sub {
+      margin:0 0 18px; color:#67d77f; text-align:center;
+      font-size:10px; text-transform:uppercase; letter-spacing:.12em;
+    }
+    .gate-error {
+      min-height:18px; margin-top:8px; color:#ff4242;
+      font-size:10px; text-transform:uppercase;
     }
 
-    .admin-rec > div:first-child {
-      min-width: 0;
-    }
-
-    .admin-rec strong {
-      display: block;
-      overflow-wrap: anywhere;
-      color: #9dffb2;
-    }
-
-    .admin-rec span {
-      display: block;
-      margin-top: 3px;
-      color: #498d59;
-      font-size: 9px;
-    }
-
-    .admin-rec-actions {
-      display: flex;
-      gap: 6px;
-      flex: 0 0 auto;
-      flex-wrap: wrap;
-    }
-
-    .empty {
-      padding: 12px;
-      color: #386f45;
-      background: #000;
-      border: 1px dashed #005216;
-      font-size: 10px;
-    }
-
-    .terminal-log {
-      margin-top: 16px;
-      padding: 10px;
-      height: 86px;
-      overflow: hidden;
-      color: #006f1e;
-      background: #000;
-      border: 1px solid #004512;
-      font-size: 9px;
-      line-height: 1.45;
-    }
-
-    .terminal-log span {
-      display: block;
-      animation: logfade 6s linear infinite;
-    }
-
-    @keyframes logfade {
-      0%,100% { opacity: .25; }
-      35%,75% { opacity: 1; }
-    }
-
-    @media (max-width: 780px) {
-      .terminal-topbar {
-        padding-inline: 9px;
-      }
-
-      .admin-page {
-        width: min(100% - 12px, 1080px);
-        margin-top: 14px;
-      }
-
-      .keep-out {
-        padding-inline: 8px;
-      }
-
-      .admin-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .admin-topline {
-        align-items: center;
-      }
-
-      .admin-rec {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-
-      .admin-rec-actions {
-        width: 100%;
-      }
-
-      .admin-rec-actions button {
-        flex: 1 1 auto;
-      }
+    @media (max-width:780px) {
+      .admin-page { width:calc(100% - 12px); margin-top:14px; }
+      .admin-grid { grid-template-columns:1fr; }
+      .admin-topline { align-items:center; }
+      .admin-rec { align-items:flex-start; flex-direction:column; }
+      .admin-rec-actions { width:100%; }
+      .admin-rec-actions button { flex:1 1 auto; }
     }
   </style>
 </head>
-
 <body>
   <canvas id="matrixRain"></canvas>
-  <div class="matrix-vignette"></div>
+  <div class="vignette"></div>
+
+  <div id="localPasswordGate">
+    <form id="localPasswordForm" class="gate-card">
+      <div class="eyebrow">LOCAL_SECURITY_GATE</div>
+      <div class="gate-warning">KEEP OUT</div>
+      <p class="gate-sub">restricted administrator terminal</p>
+      <div class="admin-form">
+        <label>ACCESS PASSWORD
+          <input id="localPasswordInput" type="password" autocomplete="current-password" autofocus>
+        </label>
+        <button class="primary-btn" type="submit">UNLOCK TERMINAL</button>
+      </div>
+      <div id="localPasswordError" class="gate-error"></div>
+    </form>
+  </div>
 
   <div class="terminal-topbar">
-    <div class="path">root@nonevent:~/cinema/admin# ./control_panel</div>
+    <div>root@nonevent:~/cinema/admin# ./control_panel</div>
     <a href="./index.html">EXIT TO SITE</a>
   </div>
 
-  <div class="warning-marquee">
+  <div class="warning">
     <marquee scrollamount="7">
       WARNING // RESTRICTED ACCESS // ADMINISTRATOR TERMINAL // UNAUTHORISED USERS KEEP OUT //
-      WARNING // RESTRICTED ACCESS // ADMINISTRATOR TERMINAL //
     </marquee>
   </div>
 
@@ -509,23 +218,16 @@
       <p>authorised operator access only // trace active // probably</p>
     </section>
 
-    <section id="adminLogin" class="admin-card admin-login">
+    <!-- Existing Supabase login remains intact underneath the local password gate -->
+    <section id="adminLogin" class="admin-card" style="width:min(520px,100%);margin:0 auto;">
       <p class="eyebrow">AUTH_GATEWAY</p>
       <h1>Authenticate</h1>
       <form id="adminLoginForm" class="admin-form">
-        <label>Operator email<input id="adminEmail" type="email" required autocomplete="username" placeholder="operator@terminal"></label>
-        <label>Access key<input id="adminPassword" type="password" required autocomplete="current-password" placeholder="••••••••••"></label>
+        <label>Operator email<input id="adminEmail" type="email" required autocomplete="username"></label>
+        <label>Supabase password<input id="adminPassword" type="password" required autocomplete="current-password"></label>
         <button class="primary-btn" type="submit">ENTER SYSTEM</button>
       </form>
       <p id="adminLoginError" class="admin-note"></p>
-
-      <div class="terminal-log" aria-hidden="true">
-        <span>[OK] Supabase uplink detected</span>
-        <span>[OK] recommendation database mounted</span>
-        <span>[WARN] public cinema node exposed to internet</span>
-        <span>[OK] administrator authentication required</span>
-        <span>[...] awaiting credentials_</span>
-      </div>
     </section>
 
     <section id="adminApp" hidden>
@@ -544,7 +246,6 @@
           <h2>&gt; NEXT_SCREENING</h2>
           <form id="screeningForm" class="admin-form">
             <input id="screeningId" type="hidden">
-
             <label>Film title<input id="filmTitle" required></label>
             <label>Date and time<input id="filmDate" type="datetime-local" required></label>
             <label>Runtime<input id="filmRuntime" placeholder="e.g. 1h 56m"></label>
@@ -557,10 +258,8 @@
               <button id="cancelBtn" class="admin-secondary" type="button">CANCEL SCREENING</button>
               <button id="markPastBtn" class="admin-secondary" type="button">MARK WATCHED</button>
             </div>
-
             <div id="cancelStatus" class="admin-note"></div>
           </form>
-
           <p class="admin-note">&gt; Voting lock executes automatically 48 hours before screening.</p>
         </section>
 
@@ -571,7 +270,6 @@
 
         <section class="admin-card">
           <h2>&gt; SCHEDULE_DAEMON</h2>
-          <p class="admin-note">Generate default fortnightly date or manually override screening datetime above.</p>
           <div class="admin-actions">
             <button id="createNextDateBtn" class="primary-btn" type="button">GENERATE NEXT DATE</button>
           </div>
@@ -588,14 +286,37 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script src="./admin.js?v=20260909-matrix1"></script>
+  <script src="./admin.js?v=20260909-matrix2"></script>
 
   <script>
     (() => {
+      const REQUIRED_PASSWORD = "password1";
+      const gate = document.getElementById("localPasswordGate");
+      const form = document.getElementById("localPasswordForm");
+      const input = document.getElementById("localPasswordInput");
+      const error = document.getElementById("localPasswordError");
+
+      // Force the password gate on every fresh browser session.
+      if (sessionStorage.getItem("ne_admin_local_unlock") === "yes") {
+        gate.classList.add("unlocked");
+      }
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (input.value === REQUIRED_PASSWORD) {
+          sessionStorage.setItem("ne_admin_local_unlock", "yes");
+          gate.classList.add("unlocked");
+          error.textContent = "";
+        } else {
+          error.textContent = "ACCESS DENIED // INCORRECT PASSWORD";
+          input.value = "";
+          input.focus();
+        }
+      });
+
       const canvas = document.getElementById("matrixRain");
       const ctx = canvas.getContext("2d");
       const chars = "01NON EVENT CINEMA MATRIX ACCESS DENIED";
-      let columns = 0;
       let drops = [];
 
       function resize() {
@@ -604,29 +325,26 @@
         canvas.height = Math.floor(innerHeight * dpr);
         canvas.style.width = innerWidth + "px";
         canvas.style.height = innerHeight + "px";
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        columns = Math.ceil(innerWidth / 16);
-        drops = Array.from({length: columns}, () => Math.random() * -80);
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        drops = Array.from({length:Math.ceil(innerWidth/16)},()=>Math.random()*-80);
       }
 
       function draw() {
         ctx.fillStyle = "rgba(0,0,0,.08)";
-        ctx.fillRect(0, 0, innerWidth, innerHeight);
+        ctx.fillRect(0,0,innerWidth,innerHeight);
         ctx.fillStyle = "#00ff41";
         ctx.font = "13px monospace";
-
-        for (let i = 0; i < drops.length; i++) {
-          const c = chars[Math.floor(Math.random() * chars.length)];
-          ctx.fillText(c, i * 16, drops[i] * 16);
-          if (drops[i] * 16 > innerHeight && Math.random() > .975) drops[i] = 0;
-          drops[i] += .55;
+        for (let i=0;i<drops.length;i++) {
+          const c = chars[Math.floor(Math.random()*chars.length)];
+          ctx.fillText(c,i*16,drops[i]*16);
+          if (drops[i]*16 > innerHeight && Math.random()>.975) drops[i]=0;
+          drops[i]+=.55;
         }
-
         requestAnimationFrame(draw);
       }
 
       resize();
-      addEventListener("resize", resize);
+      addEventListener("resize",resize);
       draw();
     })();
   </script>
