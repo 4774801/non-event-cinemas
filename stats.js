@@ -131,13 +131,7 @@
     if (rsvpRes.error) throw rsvpRes.error;
     if (ratingRes.error) throw ratingRes.error;
 
-    const launch = new Date("2026-10-01T00:00:00");
-    const archive = (archiveRes.data || []).filter(row => {
-      const when = new Date(row.screened_at || row.screening_at || 0);
-      return when >= launch;
-    });
-
-    return { archive, rsvps: rsvpRes.data, ratings: ratingRes.data };
+    return { archive: archiveRes.data, rsvps: rsvpRes.data, ratings: ratingRes.data };
   }
 
   function runtimeMinutes(runtime) {

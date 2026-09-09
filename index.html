@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#19130f" />
   <meta name="description" content="Non Event Cinemas — one screen, very limited seating." />
   <title>Non Event Cinemas</title>
-<link rel="stylesheet" href="./style.css?v=20260909-22" />
+<link rel="stylesheet" href="./style.css" />
 </head>
 <body>
 <div class="noise" aria-hidden="true"></div>
@@ -21,10 +21,10 @@
     </a>
 
     <nav class="nav">
-      <a class="nav-now" href="#screenings">Now Showing</a>
-      <a class="nav-suggestions" href="#recommendations">Suggestions</a>
-      <a class="nav-past" href="#archive">Past Films</a>
-      <a class="nav-stats" href="./stats.html">Stats</a>
+      <a href="#screenings">Now Showing</a>
+      <a href="#recommendations">Suggestions</a>
+      <a href="#archive">Past Films</a>
+      <a href="./stats.html">Stats</a>
     </nav>
 
     <button id="loginBtn" class="login-btn" type="button">
@@ -37,13 +37,13 @@
     <section class="hero hero-clean">
       <div class="hero-grid hero-grid-clean">
         <div class="hero-title-wrap">
+          <p class="eyebrow">PRIVATE CINEMA</p>
           <h1>Non Event<br><em>Cinemas.</em></h1>
           <a class="primary-link" href="#screenings">See what&#39;s on →</a>
         </div>
 
         <div class="hero-logo-wrap">
-          <img class="hero-speech-bubble" src="./movies-are-cool-bubble.png" alt="Speech bubble saying Movies are cool!">
-          <img class="hero-head-logo" src="./kj-head-logo-clean-final.png" alt="Hand-drawn host logo">
+          <img class="hero-head-logo" src="./kj-head-logo-colour.png" alt="Hand-drawn host logo">
         </div>
       </div>
     </section>
@@ -59,11 +59,10 @@
       </div>
     </section>
 
-
-
-<section id="screenings" class="section">
+    <section id="screenings" class="section">
       <div class="section-heading">
         <div>
+          <p class="eyebrow">PROGRAMME</p>
           <h2>Upcoming screenings</h2>
         </div>
         
@@ -75,6 +74,7 @@
     <section id="recommendations" class="section alt-section">
       <div class="section-heading">
         <div>
+          <p class="eyebrow">PROGRAMMING DEPARTMENT</p>
           <h2>Recommend a film</h2>
         </div>
         
@@ -108,6 +108,7 @@
     <section id="archive" class="section">
       <div class="section-heading">
         <div>
+          <p class="eyebrow">THE ARCHIVE</p>
           <h2>Previously at Non Event</h2>
         </div>
         <p class="section-note">Rate what you've survived.</p>
@@ -125,6 +126,7 @@
   <dialog id="loginDialog">
     <form id="loginForm" method="dialog" class="dialog-card">
       <button class="dialog-close" value="cancel" aria-label="Close">×</button>
+      <p class="eyebrow">MEMBERSHIP DESK</p>
       <h2>Who are you?</h2>
       
       <label>
@@ -138,6 +140,7 @@
   <dialog id="rsvpDialog">
     <form id="rsvpForm" method="dialog" class="dialog-card">
       <button class="dialog-close" value="cancel" aria-label="Close">×</button>
+      <p class="eyebrow">BOX OFFICE</p>
       <h2 id="rsvpTitle">RSVP</h2>
       
       <div class="choice-row">
@@ -150,6 +153,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script src="./app.js?v=20260909-16"></script>
+  <script src="./app.js"></script>
 </body>
 </html>

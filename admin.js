@@ -46,29 +46,9 @@
 
   async function getScreenings() {
     if (!isShared) return read("admin_screenings", [demoDefault]);
-
-    const { data, error } = await sb
-      .from("screenings")
-      .select("*")
-      .order("screening_at");
-
+    const { data, error } = await sb.from("screenings").select("*").order("screening_at");
     if (error) throw error;
-
-    return (data || []).map(row => {
-      const title = String(row.title || "").trim().toLowerCase();
-      if (title.includes("nice guys")) {
-        return {
-          ...row,
-          title: "TBC",
-          runtime: null,
-          year: null,
-          note: null,
-          poster_url: null,
-          curator: null
-        };
-      }
-      return row;
-    });
+    return data;
   }
 
   async function getRecommendations() {
@@ -162,29 +142,6 @@
       .neq("recommendation_id", -1));
     if (error) throw error;
   }
-
-
-  async function removeRecommendation(id) {
-    if (!id) return;
-
-    if (!isShared) {
-      const rows = read("recommendations", []);
-      write("recommendations", rows.filter(r => String(r.id) !== String(id)));
-      return;
-    }
-
-    // Remove any individual vote records first, then remove the recommendation.
-    let { error } = await sb.from("recommendation_votes")
-      .delete()
-      .eq("recommendation_id", id);
-    if (error) throw error;
-
-    ({ error } = await sb.from("recommendations")
-      .delete()
-      .eq("id", id));
-    if (error) throw error;
-  }
-
 
   async function chooseRecommendation(rec) {
     const rows = await getScreenings();
@@ -294,34 +251,13 @@
           <strong>${i+1}. ${esc(r.title)}</strong>
           <span>${Number(r.votes||0)} vote${Number(r.votes||0)===1?"":"s"} · ${esc(r.user_name||"")}</span>
         </div>
-        <div class="admin-rec-actions">
-          <button class="admin-secondary" data-pick="${esc(r.id)}">Use film</button>
-          <button class="admin-secondary admin-danger" data-remove-rec="${esc(r.id)}">Remove</button>
-        </div>
+        <button class="admin-secondary" data-pick="${esc(r.id)}">Use film</button>
       </div>`).join("") || `<p class="empty">No recommendations.</p>`;
 
     document.querySelectorAll("[data-pick]").forEach(btn => {
       btn.addEventListener("click", () => {
         const rec = recs.find(r => String(r.id) === String(btn.dataset.pick));
         if (rec) chooseRecommendation(rec);
-      });
-    });
-
-    document.querySelectorAll("[data-remove-rec]").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const rec = recs.find(r => String(r.id) === String(btn.dataset.removeRec));
-        if (!rec) return;
-
-        const ok = confirm(`Remove "${rec.title}" from recommendations?`);
-        if (!ok) return;
-
-        try {
-          await removeRecommendation(rec.id);
-          await render();
-        } catch (err) {
-          console.error(err);
-          alert("Could not remove recommendation. Supabase may need an admin delete policy.");
-        }
       });
     });
   }

@@ -220,13 +220,3 @@ The public card shows the date and links directly to the recommendation poll.
 Older Supabase projects that still contain the original demo row
 `The Nice Guys` on 1 October 2026 are automatically treated as undecided by the public site.
 Once you replace that title in Admin with the real selected film, the normal poster/RSVP card appears.
-
-
-## Current launch behaviour
-
-- If Supabase has no future screening, the homepage shows the built-in
-  **Thu 1 Oct 2026 · You decide** card linking to the film poll.
-- Any old demo past-screening rows dated before 1 October 2026 are ignored
-  by the public site and Stats page.
-- Therefore the archive shows **Coming Soon** until a genuine screening
-  on or after launch has been marked as watched.

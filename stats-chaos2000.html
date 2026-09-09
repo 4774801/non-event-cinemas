@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b2a6f">
+  <meta name="description" content="Non Event Cinemas record book and statistics.">
+  <title>STATS!!! · Non Event Cinemas</title>
+  <link rel="stylesheet" href="./chaos2000.css">
+</head>
+
+<body class="stats-chaos-page">
+  <div class="top-warning">
+    <marquee scrollamount="5">
+      ★ NON EVENT CINEMAS RECORD BOOK ★ OFFICIAL STATISTICS DEPARTMENT ★ NUMBERS DO NOT LIE, PEOPLE DO ★
+    </marquee>
+  </div>
+
+  <div class="page-shell stats-shell">
+    <div class="fake-toolbar">
+      <a class="toolbar-link" href="./index-chaos2000.html">◀ HOME</a>
+      <button type="button" onclick="location.reload()">⟳ REFRESH</button>
+      <div class="fake-address">http://www.noneventcinemas.com/stats/records.html</div>
+      <img class="tiny-gif"
+           src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Animated_spinning_globe_of_the_world.gif"
+           alt="">
+    </div>
+
+    <header class="stats-masthead">
+      <aside class="stats-side-menu">
+        <div class="side-title">NAVIGATION</div>
+        <nav class="side-nav">
+          <a href="./index-chaos2000.html#screenings">► NOW SHOWING</a>
+          <a href="./index-chaos2000.html#recommendations">► SUGGESTIONS</a>
+          <a href="./index-chaos2000.html#archive">► PAST FILMS</a>
+          <a class="current-link" href="./stats-chaos2000.html">► STATS!!!</a>
+        </nav>
+
+        <div class="visitor-box stats-counter">
+          <b>DATABASE STATUS</b><br>
+          <span>ONLINE</span><br>
+          <small>probably</small>
+        </div>
+      </aside>
+
+      <div class="stats-title-panel">
+        <div class="sparkle-row stats-sparkle">
+          <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/AnimatedStar.gif" alt="">
+          <span>THE OFFICIAL RECORD BOOK</span>
+          <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/AnimatedStar.gif" alt="">
+        </div>
+
+        <h1>STATS<span>.HTML</span></h1>
+        <p>Attendance, ratings and other extremely important cinema administration.</p>
+
+        <div class="stats-hero-strip">
+          <span>TOP 3 ATTENDANCE</span>
+          <span>★ FILM RATINGS ★</span>
+          <span>BEST CURATOR</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="rainbow-divider stats-rainbow"></div>
+
+    <main class="stats-main">
+      <section class="chaos-window stats-window">
+        <div class="window-title">
+          <span>ATTENDANCE_LEAGUE.TXT</span>
+          <span class="window-controls">_ □ ×</span>
+        </div>
+        <div class="window-body">
+          <div class="stats-section-heading">
+            <div>
+              <div class="retro-kicker">REGULARS</div>
+              <h2>TOP ATTENDEES</h2>
+            </div>
+            <div class="tiny-badge">TOP 3 ONLY</div>
+          </div>
+          <div id="attendancePodium" class="attendance-podium"></div>
+        </div>
+      </section>
+
+      <section class="chaos-window stats-window">
+        <div class="window-title teal-title">
+          <span>CINEMA_RECORDS.XLS</span>
+          <span class="window-controls">_ □ ×</span>
+        </div>
+        <div class="window-body">
+          <div class="stats-section-heading">
+            <div>
+              <div class="retro-kicker">DATABASE TOTALS</div>
+              <h2>BY THE NUMBERS</h2>
+            </div>
+          </div>
+          <div id="recordGrid" class="record-grid"></div>
+        </div>
+      </section>
+
+      <section class="chaos-window stats-window">
+        <div class="window-title purple">
+          <span>FILM_RANKINGS.DAT</span>
+          <span class="window-controls">_ □ ×</span>
+        </div>
+        <div class="window-body">
+          <div class="stats-section-heading">
+            <div>
+              <div class="retro-kicker">CRITICAL CONSENSUS</div>
+              <h2>EVERY FILM, RANKED</h2>
+            </div>
+            <img class="stats-star"
+                 src="https://commons.wikimedia.org/wiki/Special:Redirect/file/AnimatedStar.gif"
+                 alt="">
+          </div>
+          <div id="filmRanking" class="film-ranking"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="gif-strip" aria-hidden="true">
+        <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/AnimatedStar.gif" alt="">
+        <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Animated_spinning_globe_of_the_world.gif" alt="">
+        <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Animated_winking_Smiley_colored.gif" alt="">
+      </div>
+      <p>
+        NON EVENT CINEMAS RECORDS DEPARTMENT ·
+        <a href="./index-chaos2000.html">RETURN TO HOMEPAGE</a>
+      </p>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./stats.js?v=20260909-chaos2"></script>
+</body>
+</html>
