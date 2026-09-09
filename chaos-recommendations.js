@@ -94,7 +94,7 @@
 
   const STOPWORDS = new Set(["the"]);
   const imageCacheKey = "ne_chaos_fake_poster_cache_v3";
-  const creditsCacheKey = "ne_chaos_movie_credits_cache_v3";
+  const creditsCacheKey = "ne_chaos_movie_credits_cache_v4";
 
   function readCache(key) {
     try { return JSON.parse(localStorage.getItem(key)) || {}; }
@@ -320,7 +320,13 @@
         const ed=await er.json();
         const entity=ed?.entities?.[qid];
         const directorIds=entityIds(entity,"P57",2);
-        const castIds=entityIds(entity,"P161",2);
+
+        // Ordinary films generally use P161 (cast member), while animated
+        // films may expose performers through P725 (voice actor).
+        const castMemberIds=entityIds(entity,"P161",8);
+        const voiceActorIds=entityIds(entity,"P725",8);
+        const castIds=[...new Set([...castMemberIds,...voiceActorIds])].slice(0,2);
+
         const labels=await wikidataLabels([...directorIds,...castIds]);
         result.director=directorIds.map(id=>labels[id]).filter(Boolean).join(", ");
         result.cast=castIds.map(id=>labels[id]).filter(Boolean).slice(0,2);
