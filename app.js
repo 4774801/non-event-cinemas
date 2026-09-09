@@ -363,6 +363,9 @@
 
     const cards = await Promise.all(screenings.map(async s => {
       if (isUndecidedScreening(s)) {
+        const going = rsvps.filter(r => String(r.screening_id) === String(s.id) && r.status === "going");
+        const mine = rsvps.find(r => String(r.screening_id) === String(s.id) && r.user_name === user);
+
         return `
           <article class="screening-card screening-card-undecided">
             <div class="undecided-date">
@@ -372,6 +375,13 @@
               <h3>You decide.</h3>
               <p>The first film hasn&#39;t been chosen yet.</p>
               <a class="poll-link" href="#recommendations">Vote for the film →</a>
+              <div class="attendee-line undecided-attendees">
+                <strong>${going.length} attending</strong>
+                ${going.length ? ` · ${going.map(x => esc(x.user_name)).join(", ")}` : " · Be the first to commit."}
+              </div>
+              <button class="rsvp-btn" data-rsvp="${esc(s.id)}">
+                ${mine ? `RSVP: ${mine.status.replace("_"," ")}` : "RSVP"}
+              </button>
             </div>
           </article>`;
       }

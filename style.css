@@ -1548,3 +1548,13 @@ dialog .eyebrow {
   background: #8d2e29;
   color: #f7f3ea;
 }
+
+
+/* --- RSVP on undecided screening --- */
+.undecided-attendees {
+  margin-top: 22px;
+}
+
+.screening-card-undecided .rsvp-btn {
+  margin-top: 12px;
+}
