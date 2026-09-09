@@ -453,8 +453,20 @@
       showToast("Voting is closed for the next screening.");
       return false;
     }
+
+    // One active recommendation per person at a time.
+    const activeRows = await getRecommendations();
+    const alreadyHasOne = activeRows.some(r =>
+      String(r.user_name || "").trim().toLowerCase() === String(user || "").trim().toLowerCase()
+    );
+
+    if (alreadyHasOne) {
+      showToast("You already have an active recommendation.");
+      return false;
+    }
+
     if (!isShared) {
-      const rows = (await getRecommendations()).filter(r => r.is_active !== false);
+      const rows = activeRows.filter(r => r.is_active !== false);
       rows.push({ id: crypto.randomUUID(), title, reason, poster_url: posterUrl, user_name: user, votes: 0, voters: [], is_active: true });
       write("recommendations", rows);
     } else {
@@ -465,7 +477,14 @@
         user_name: user,
         is_active: true
       });
-      if (error) throw error;
+      if (error) {
+        // Database constraint also enforces one active recommendation per person.
+        if (error.code === "23505") {
+          showToast("You already have an active recommendation.");
+          return false;
+        }
+        throw error;
+      }
     }
     return true;
   }
