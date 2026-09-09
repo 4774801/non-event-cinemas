@@ -262,4 +262,47 @@
 
   new MutationObserver(scan).observe(list,{childList:true,subtree:false});
   scan();
+
+  // ----------------------------------------------------------
+  // Login / RSVP popup close fix
+  // ----------------------------------------------------------
+  function installDialogCloseFixes() {
+    document.querySelectorAll("dialog").forEach((dialog) => {
+      const closeButton = dialog.querySelector(".dialog-close");
+
+      if (closeButton && !closeButton.dataset.closeFixInstalled) {
+        closeButton.dataset.closeFixInstalled = "true";
+
+        closeButton.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          if (dialog.open) dialog.close();
+
+          // Clear typed sign-in value when the user explicitly cancels.
+          if (dialog.id === "loginDialog") {
+            const input = dialog.querySelector("#nameInput");
+            if (input) input.value = "";
+          }
+        }, true);
+      }
+
+      if (!dialog.dataset.cancelFixInstalled) {
+        dialog.dataset.cancelFixInstalled = "true";
+
+        dialog.addEventListener("cancel", (event) => {
+          event.preventDefault();
+          if (dialog.open) dialog.close();
+
+          if (dialog.id === "loginDialog") {
+            const input = dialog.querySelector("#nameInput");
+            if (input) input.value = "";
+          }
+        });
+      }
+    });
+  }
+
+  installDialogCloseFixes();
+
 })();
