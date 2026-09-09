@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin · Non Event Cinemas</title>
+<link rel="stylesheet" href="./style.css?v=20260909-13" />
+</head>
+<body>
+<header class="header">
+    <a class="brand" href="./index.html">
+      <span class="brand-mark">NE</span>
+      <span><strong>NON EVENT</strong><small>CINEMAS</small></span>
+    </a>
+    <nav class="nav">
+      <a href="./index.html">Programme</a>
+      <a href="./stats.html">Stats</a>
+    </nav>
+    <a class="login-btn stats-home" href="./index.html">← Site</a>
+  </header>
+
+  <main class="admin-page">
+    <section id="adminLogin" class="admin-card admin-login">
+      <p class="eyebrow">ADMIN</p>
+      <h1>Sign in</h1>
+      <form id="adminLoginForm" class="admin-form">
+        <label>Email<input id="adminEmail" type="email" required autocomplete="username"></label>
+        <label>Password<input id="adminPassword" type="password" required autocomplete="current-password"></label>
+        <button class="primary-btn" type="submit">Sign in</button>
+      </form>
+      <p id="adminLoginError" class="admin-note"></p>
+    </section>
+
+    <section id="adminApp" hidden>
+      <div class="admin-topline">
+        <div>
+          <p class="eyebrow">ADMIN</p>
+          <h1>Programme</h1>
+        </div>
+        <button id="adminLogout" class="admin-secondary" type="button">Sign out</button>
+      </div>
+
+      <div id="adminModeNotice" class="vote-status"></div>
+
+      <div class="admin-grid">
+      <section class="admin-card">
+        <h2>Next screening</h2>
+        <form id="screeningForm" class="admin-form">
+          <input id="screeningId" type="hidden">
+          <label>Film title<input id="filmTitle" required></label>
+          <label>Date and time<input id="filmDate" type="datetime-local" required></label>
+          <label>Runtime<input id="filmRuntime" placeholder="e.g. 1h 56m"></label>
+          <label>Year<input id="filmYear" type="number" min="1888" max="2100"></label>
+          <label>Curator<input id="filmCurator" maxlength="24"></label>
+          <label>Poster URL<input id="filmPoster" type="url" placeholder="Optional"></label>
+          <div class="admin-actions">
+            <button class="primary-btn" type="submit">Save screening</button>
+            <button id="cancelBtn" class="admin-secondary" type="button">Cancel screening</button>
+            <button id="markPastBtn" class="admin-secondary" type="button">Mark as watched</button>
+          </div>
+          <div id="cancelStatus" class="admin-note"></div>
+        </form>
+        <p class="admin-note">Voting closes automatically 48 hours before the screening time.</p>
+      </section>
+
+      <section class="admin-card">
+        <h2>Recommendation votes</h2>
+        <div id="adminRecommendations" class="admin-list"></div>
+      </section>
+
+      <section class="admin-card">
+        <h2>Schedule</h2>
+        <p class="admin-note">Create a default fortnightly date, or set any date/time manually above.</p>
+        <div class="admin-actions">
+          <button id="createNextDateBtn" class="primary-btn" type="button">Create next fortnightly date</button>
+        </div>
+        <div id="futureDates" class="admin-list"></div>
+      </section>
+
+      <section class="admin-card">
+        <h2>Voting</h2>
+        <div id="adminCutoff"></div>
+      </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./admin.js?v=20260909-13"></script>
+</body>
+</html>

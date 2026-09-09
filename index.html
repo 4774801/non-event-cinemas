@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#19130f" />
+  <meta name="description" content="Non Event Cinemas — one screen, very limited seating." />
+  <title>Non Event Cinemas</title>
+<link rel="stylesheet" href="./style.css?v=20260909-13" />
+</head>
+<body>
+<div class="noise" aria-hidden="true"></div>
+
+  <header class="header">
+    <a class="brand" href="#top">
+      <span class="brand-mark">NE</span>
+      <span>
+        <strong>NON EVENT</strong>
+        <small>CINEMAS</small>
+      </span>
+    </a>
+
+    <nav class="nav">
+      <a href="#screenings">Now Showing</a>
+      <a href="#recommendations">Suggestions</a>
+      <a href="#archive">Past Films</a>
+      <a href="./stats.html">Stats</a>
+    </nav>
+
+    <button id="loginBtn" class="login-btn" type="button">
+      <span class="status-dot"></span>
+      <span id="loginLabel">Sign in</span>
+    </button>
+  </header>
+
+  <main id="top">
+    <section class="hero hero-clean">
+      <div class="hero-grid hero-grid-clean">
+        <div class="hero-title-wrap">
+          <h1>Non Event<br><em>Cinemas.</em></h1>
+          <a class="primary-link" href="#screenings">See what&#39;s on →</a>
+        </div>
+
+        <div class="hero-logo-wrap">
+          <img class="hero-speech-bubble" src="./movies-are-cool-bubble.png" alt="Speech bubble saying Movies are cool!">
+          <img class="hero-head-logo" src="./kj-head-logo-clean-final.png" alt="Hand-drawn host logo">
+        </div>
+      </div>
+    </section>
+
+    <section class="ticker" aria-label="Cinema notice">
+      <div class="ticker-track">
+        <span>★ TICKETS NOW ON SALE</span>
+        <span>★ TICKETS NOW ON SALE</span>
+        <span>★ TICKETS NOW ON SALE</span>
+        <span>★ TICKETS NOW ON SALE</span>
+        <span>★ TICKETS NOW ON SALE</span>
+        <span>★ TICKETS NOW ON SALE</span>
+      </div>
+    </section>
+
+
+
+<section id="screenings" class="section">
+      <div class="section-heading">
+        <div>
+          <h2>Upcoming screenings</h2>
+        </div>
+        
+      </div>
+
+      <div id="screeningGrid" class="screening-grid"></div>
+    </section>
+
+    <section id="recommendations" class="section alt-section">
+      <div class="section-heading">
+        <div>
+          <h2>Recommend a film</h2>
+        </div>
+        
+      </div>
+
+      <div id="voteStatus" class="vote-status"></div>
+      <div class="recommend-layout">
+        <form id="recommendForm" class="recommend-form">
+          <label>
+            Film title
+            <input id="recTitle" type="text" placeholder="e.g. Heat" required maxlength="100">
+          </label>
+          <label>
+            Why should we watch it?
+            <textarea id="recReason" placeholder="Sell it to the room…" maxlength="280"></textarea>
+          </label>
+          <button class="primary-btn" type="submit">Submit recommendation</button>
+          <p class="form-help">You'll be asked to sign in with a name or initials if you haven't already.</p>
+        </form>
+
+        <div>
+          <div class="mini-heading">
+            <h3>The pile</h3>
+            <span id="recCount">0 suggestions</span>
+          </div>
+          <div id="recommendationList" class="recommendation-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="archive" class="section">
+      <div class="section-heading">
+        <div>
+          <h2>Previously at Non Event</h2>
+        </div>
+        <p class="section-note">Rate what you've survived.</p>
+      </div>
+
+      <div id="archiveGrid" class="archive-grid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <span>NON EVENT CINEMAS</span>
+    <span>NOT AFFILIATED WITH EVENT CINEMAS · <a href="./admin.html">ADMIN</a></span>
+  </footer>
+
+  <dialog id="loginDialog">
+    <form id="loginForm" method="dialog" class="dialog-card">
+      <button class="dialog-close" value="cancel" aria-label="Close">×</button>
+      <h2>Who are you?</h2>
+      
+      <label>
+        Name or initials
+        <input id="nameInput" type="text" required maxlength="24" autocomplete="nickname" placeholder="KJ">
+      </label>
+      <button class="primary-btn" value="default" type="submit">Enter Non Event</button>
+    </form>
+  </dialog>
+
+  <dialog id="rsvpDialog">
+    <form id="rsvpForm" method="dialog" class="dialog-card">
+      <button class="dialog-close" value="cancel" aria-label="Close">×</button>
+      <h2 id="rsvpTitle">RSVP</h2>
+      
+      <div class="choice-row">
+        <button class="choice-btn yes" type="button" data-status="going">I'm in</button>
+        <button class="choice-btn maybe" type="button" data-status="maybe">Maybe</button>
+        <button class="choice-btn no" type="button" data-status="not_going">Can't make it</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./app.js?v=20260909-13"></script>
+</body>
+</html>
