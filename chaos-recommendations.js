@@ -2,8 +2,8 @@
   const list = document.querySelector("#recommendationList");
   if (!list) return;
 
-  const STOPWORDS = new Set([]); // intentionally none: "The Raid" searches Commons for "The".
-  const imageCacheKey = "ne_chaos_fake_poster_cache_v1";
+  const STOPWORDS = new Set(["the"]); // "The Raid" searches Commons for "Raid".
+  const imageCacheKey = "ne_chaos_fake_poster_cache_v2";
   const creditsCacheKey = "ne_chaos_movie_credits_cache_v1";
 
   function readCache(key) {
