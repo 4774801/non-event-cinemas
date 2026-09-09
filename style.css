@@ -1803,3 +1803,96 @@ dialog .eyebrow {
     padding-right: 0;
   }
 }
+
+
+/* --- Full-width balanced mobile recommendation cards --- */
+@media (max-width: 620px) {
+  .recommendation-list {
+    width: 100%;
+  }
+
+  .recommendation-item {
+    width: 100%;
+    box-sizing: border-box;
+    grid-template-columns: 52px minmax(82px, 25vw) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 10px;
+    row-gap: 8px;
+    align-items: stretch;
+    padding: 18px 0;
+  }
+
+  .rec-rank {
+    grid-column: 1;
+    grid-row: 1;
+    width: 52px;
+    font-size: 42px;
+    line-height: .9;
+    text-align: center;
+    align-self: start;
+  }
+
+  .vote-btn {
+    grid-column: 1 !important;
+    grid-row: 2;
+    width: 52px !important;
+    min-width: 52px;
+    min-height: 38px;
+    box-sizing: border-box;
+    align-self: start;
+    justify-self: stretch;
+    padding: 7px 0;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .rec-poster {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    width: 100% !important;
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: auto;
+    align-self: stretch;
+    object-fit: cover;
+  }
+
+  .rec-poster-empty {
+    height: 100%;
+    min-height: 120px;
+  }
+
+  .rec-copy {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    width: 100%;
+    min-width: 0;
+    align-self: stretch;
+  }
+
+  .rec-title {
+    font-size: 16px;
+    line-height: 1.15;
+  }
+
+  .rec-reason {
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 380px) {
+  .recommendation-item {
+    grid-template-columns: 48px minmax(76px, 24vw) minmax(0, 1fr);
+    column-gap: 8px;
+  }
+
+  .rec-rank {
+    width: 48px;
+    font-size: 38px;
+  }
+
+  .vote-btn {
+    width: 48px !important;
+    min-width: 48px;
+  }
+}
