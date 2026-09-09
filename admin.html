@@ -280,6 +280,14 @@
           <h2>&gt; VOTING_LOCK_STATUS</h2>
           <div id="adminCutoff"></div>
         </section>
+
+        <section class="admin-card">
+          <h2>&gt; USER_REGISTRY</h2>
+          <p class="admin-note">Friend usernames that have been entered on the public site.</p>
+          <div id="adminUserRegistry" class="admin-list">
+            <div class="empty">QUERYING USER DATABASE...</div>
+          </div>
+        </section>
       </div>
     </section>
   </main>
@@ -287,6 +295,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
   <script src="./admin.js?v=20260909-matrix2"></script>
+  <script src="./admin-usernames.js?v=20260909-1"></script>
 
   <script>
     (() => {

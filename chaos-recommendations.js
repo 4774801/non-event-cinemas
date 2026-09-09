@@ -305,4 +305,47 @@
 
   installDialogCloseFixes();
 
+
+  // ----------------------------------------------------------
+  // Username registry
+  // Records anyone who submits the friend sign-in form.
+  // ----------------------------------------------------------
+  function installUsernameRegistry() {
+    const form = document.querySelector("#loginForm");
+    const input = document.querySelector("#nameInput");
+    if (!form || !input || form.dataset.registryInstalled) return;
+
+    form.dataset.registryInstalled = "true";
+
+    form.addEventListener("submit", async () => {
+      const userName = String(input.value || "").trim();
+      if (!userName) return;
+
+      const cfg = window.NON_EVENT_CONFIG || {};
+      if (!window.supabase || !cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return;
+
+      try {
+        const client = window.supabase.createClient(
+          cfg.SUPABASE_URL,
+          cfg.SUPABASE_ANON_KEY
+        );
+
+        await client
+          .from("friend_users")
+          .upsert(
+            {
+              user_name: userName,
+              last_seen_at: new Date().toISOString()
+            },
+            { onConflict: "user_name" }
+          );
+      } catch (error) {
+        // Never block normal friend sign-in if registry logging fails.
+        console.warn("Username registry update failed:", error);
+      }
+    });
+  }
+
+  installUsernameRegistry();
+
 })();
