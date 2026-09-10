@@ -103,24 +103,23 @@
       overflow-wrap: anywhere;
     }
 
-    .recommendation-item button.vote-btn.voted,
-    .recommendation-item button.vote-btn[aria-pressed="true"] {
-      background: #a8a8a8 !important;
+    .recommendation-item .vote-btn.voted,
+    .recommendation-item .vote-btn[aria-pressed="true"] {
+      background: #a9a9a9 !important;
       color: #111 !important;
       border-style: solid !important;
       border-width: 4px !important;
-      border-top-color: #383838 !important;
-      border-left-color: #383838 !important;
-      border-right-color: #ffffff !important;
-      border-bottom-color: #ffffff !important;
+      border-top-color: #333 !important;
+      border-left-color: #333 !important;
+      border-right-color: #fff !important;
+      border-bottom-color: #fff !important;
       box-shadow:
-        inset 3px 3px 0 #666666,
-        inset -1px -1px 0 #d8d8d8 !important;
+        inset 3px 3px 0 #666,
+        inset -1px -1px 0 #ddd !important;
       transform: translate(2px, 2px) !important;
       filter: none !important;
       font-weight: 900 !important;
     }
-
 
     .rec-form-window {
       display: flex !important;
@@ -419,68 +418,26 @@
     cache[key]=result; writeCache(creditsCacheKey,cache); return result;
   }
 
-  const factsCacheKey = "ne_chaos_pile_facts_v2";
+  const factsCacheKey = "ne_chaos_pile_facts_v1";
 
-  function triviaKey(title) {
-    return String(title || "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim();
-  }
-
-  // Curated facts for the films currently in the pile. These are deliberately
-  // behind-the-scenes / oddball facts rather than plot summaries.
-  const curatedPileFacts = {
-    "the road to el dorado":
-      "Kevin Kline and Kenneth Branagh recorded their dialogue together — unusual for animated films — so Tulio and Miguel could bounce off each other like a live-action comedy duo.",
-
-    "road to el dorado":
-      "Kevin Kline and Kenneth Branagh recorded their dialogue together — unusual for animated films — so Tulio and Miguel could bounce off each other like a live-action comedy duo.",
-
-    "basil the great mouse detective":
-      "For the Big Ben climax, Disney used computer-generated clockwork behind hand-drawn characters. The sequence became one of Disney animation's big early CGI milestones.",
-
-    "the great mouse detective":
-      "For the Big Ben climax, Disney used computer-generated clockwork behind hand-drawn characters. The sequence became one of Disney animation's big early CGI milestones.",
-
-    "the princess bride":
-      "Rob Reiner reportedly had to leave the set during Billy Crystal's Miracle Max scenes because he was laughing so hard he felt sick.",
-
-    "princess bride":
-      "Rob Reiner reportedly had to leave the set during Billy Crystal's Miracle Max scenes because he was laughing so hard he felt sick.",
-
-    "hot fuzz":
-      "An early draft gave Nicholas Angel a girlfriend called Victoria. She was cut, and much of her dialogue was simply handed to Danny — often without changing the lines.",
-
-    "about time":
-      "Zooey Deschanel was originally cast as Mary, but scheduling conflicts led to Rachel McAdams taking the role instead.",
-
-    "the godfather":
-      "The cat in Don Corleone's opening scene was a stray Francis Ford Coppola found on the studio lot. Its purring was loud enough to interfere with Marlon Brando's dialogue.",
-
-    "godfather":
-      "The cat in Don Corleone's opening scene was a stray Francis Ford Coppola found on the studio lot. Its purring was loud enough to interfere with Marlon Brando's dialogue."
-  };
-
-  async function wikipediaFullExtract(pageTitle) {
+  async function wikipediaIntro(pageTitle) {
     const key = String(pageTitle || "").toLowerCase();
     const cache = readCache(factsCacheKey);
     if (Object.prototype.hasOwnProperty.call(cache, key)) return cache[key];
 
     let extract = "";
-
     try {
       const params = new URLSearchParams({
         action: "query",
         titles: pageTitle,
         prop: "extracts",
+        exintro: "1",
         explaintext: "1",
-        exchars: "12000",
+        exsentences: "1",
         redirects: "1",
         format: "json",
         origin: "*"
       });
-
       const response = await fetch(`https://en.wikipedia.org/w/api.php?${params}`);
       const data = await response.json();
       const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
@@ -494,60 +451,12 @@
     return extract;
   }
 
-  function interestingSentence(text) {
-    const sentences = String(text || "")
-      .replace(/\n+/g, " ")
-      .split(/(?<=[.!?])\s+/)
-      .map(s => s.trim())
-      .filter(s => s.length >= 55 && s.length <= 260);
-
-    const weights = [
-      ["improvis", 10],
-      ["originally", 9],
-      ["cameo", 9],
-      ["recorded together", 10],
-      ["replaced", 8],
-      ["computer animation", 9],
-      ["cgi", 9],
-      ["filmed", 7],
-      ["shot", 7],
-      ["audition", 8],
-      ["sequel", 8],
-      ["cancelled", 8],
-      ["inspired", 7],
-      ["studio", 4],
-      ["animation", 5],
-      ["location", 5],
-      ["box office", 5],
-      ["budget", 5],
-      ["award", 4],
-      ["cast", 3]
-    ];
-
-    const scored = sentences.map((sentence, index) => {
-      const lower = sentence.toLowerCase();
-      let score = index < 3 ? -7 : 0;
-
-      for (const [needle, weight] of weights) {
-        if (lower.includes(needle)) score += weight;
-      }
-
-      if (/ is a \d{4} .*film/.test(lower)) score -= 12;
-      if (/directed by|stars .* as /.test(lower)) score -= 5;
-
-      return { sentence, score };
-    }).sort((a, b) => b.score - a.score);
-
-    return scored[0]?.score > 1 ? scored[0].sentence : "";
-  }
-
-  function shortenFact(text, max = 230) {
+  function shortenFact(text, max = 190) {
     const clean = String(text || "").replace(/\s+/g, " ").trim();
     if (clean.length <= max) return clean;
-
     const cut = clean.slice(0, max);
     const lastSpace = cut.lastIndexOf(" ");
-    return `${cut.slice(0, lastSpace > 150 ? lastSpace : max).trim()}…`;
+    return `${cut.slice(0, lastSpace > 120 ? lastSpace : max).trim()}…`;
   }
 
   function ensureFactsPanel() {
@@ -558,7 +467,7 @@
 
     panel = document.createElement("div");
     panel.className = "pile-facts";
-    panel.innerHTML = `<div class="pile-facts-title">★ ACTUALLY INTERESTING PILE FACTS ★</div><div class="pile-facts-body">SEARCHING THE INTERNET FOR SOMETHING ACTUALLY INTERESTING...</div>`;
+    panel.innerHTML = `<div class="pile-facts-title">★ PILE TRIVIA DATABASE ★</div><div class="pile-facts-body">LOADING EXTREMELY IMPORTANT FILM FACTS...</div>`;
     body.appendChild(panel);
     return panel;
   }
@@ -583,20 +492,16 @@
     panel.dataset.signature = signature;
     const requestId = ++factsRequest;
     const facts = await Promise.all(titles.map(async title => {
-      const directFact = curatedPileFacts[triviaKey(title)];
-      if (directFact) return { title, fact: directFact };
-
       const credits = await movieCredits(title);
       const matched = credits.matchedTitle || canonicalMovieTitle(title) || title;
-      const extract = await wikipediaFullExtract(matched);
-      let fact = shortenFact(interestingSentence(extract));
+      const intro = await wikipediaIntro(matched);
 
-      if (!fact) {
-        fact = credits.director
-          ? `No properly weird production fact found yet. ${credits.director} directed it — the database has been formally reprimanded.`
-          : "Wikipedia has somehow made this film boring. Complaint lodged.";
+      let fact = shortenFact(intro);
+      if (!fact && credits.director) {
+        const cast = credits.cast?.length ? ` Starring ${credits.cast.join(" and ")}.` : "";
+        fact = `Directed by ${credits.director}.${cast}`;
       }
-
+      if (!fact) fact = "The internet has declined to provide a useful fact about this film.";
       return { title, fact };
     }));
 
