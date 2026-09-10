@@ -170,6 +170,23 @@
       color: #000080;
       text-transform: uppercase;
     }
+
+    @media (max-width: 820px) {
+      .pile-facts {
+        flex: 0 0 auto !important;
+        min-height: 0 !important;
+        margin-top: 10px;
+      }
+
+      .pile-facts .pile-fact {
+        display: none;
+        margin-bottom: 0;
+      }
+
+      .pile-facts .pile-fact.mobile-active {
+        display: block;
+      }
+    }
 `;
   document.head.appendChild(interactionStyle);
 
@@ -606,7 +623,52 @@
         <strong>${escapeHtml(title)}</strong>
         ${escapeHtml(fact)}
       </div>`).join("");
+
+    updateMobileFactDisplay(true);
   }
+
+  let mobileFactTimer = null;
+  let mobileFactIndex = 0;
+
+  function updateMobileFactDisplay(reset = false) {
+    const panel = document.querySelector(".pile-facts");
+    if (!panel) return;
+
+    const facts = [...panel.querySelectorAll(".pile-fact")];
+    const title = panel.querySelector(".pile-facts-title");
+    const isMobile = window.matchMedia("(max-width: 820px)").matches;
+
+    clearInterval(mobileFactTimer);
+    mobileFactTimer = null;
+
+    if (!isMobile || facts.length <= 1) {
+      facts.forEach(fact => fact.classList.remove("mobile-active"));
+      if (title) title.textContent = "★ ACTUALLY INTERESTING PILE FACTS ★";
+      return;
+    }
+
+    if (reset) mobileFactIndex = 0;
+    mobileFactIndex %= facts.length;
+
+    function showCurrent() {
+      facts.forEach((fact, index) => {
+        fact.classList.toggle("mobile-active", index === mobileFactIndex);
+      });
+
+      if (title) {
+        title.textContent = `★ FUN FACT ${mobileFactIndex + 1}/${facts.length} ★`;
+      }
+    }
+
+    showCurrent();
+
+    mobileFactTimer = setInterval(() => {
+      mobileFactIndex = (mobileFactIndex + 1) % facts.length;
+      showCurrent();
+    }, 8000);
+  }
+
+  window.addEventListener("resize", () => updateMobileFactDisplay(false));
 
   function ensureCopy(card) {
     let copy=card.querySelector(":scope > .rec-copy");
