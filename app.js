@@ -666,12 +666,21 @@
     recommendationList.innerHTML = rows.length ? rows.map((r, i) => {
       const voters = voterNames(r);
       const voted = hasUserVoted(r, user);
-      const totalVotes = Number(r.votes || voters.length || 0);
 
-      // The nominator's vote is assumed, so don't repeat their name under
-      // VOTED BY. Their vote still counts and still depresses their button.
+      const nominator = String(r.user_name || "").trim();
+      const nominatorAlreadyRecorded = nominator && voters.some(v =>
+        normUserName(v) === normUserName(nominator)
+      );
+
+      // House rule: nominating a film always includes your own vote.
+      // Older recommendations may pre-date that rule, so the displayed total
+      // still adds the assumed self-vote when its row is missing.
+      const recordedVotes = Math.max(Number(r.votes || 0), voters.length);
+      const totalVotes = recordedVotes + (nominator && !nominatorAlreadyRecorded ? 1 : 0);
+
+      // Don't list the nominator under VOTED BY because their self-vote is assumed.
       const displayVoters = voters.filter(v =>
-        normUserName(v) !== normUserName(r.user_name)
+        normUserName(v) !== normUserName(nominator)
       );
 
       const voterLine = displayVoters.length
