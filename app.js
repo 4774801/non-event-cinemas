@@ -22,7 +22,7 @@
         id: "s1",
         title: "TBC",
         curator: "",
-        screening_at: "2026-10-01T19:30:00",
+        screening_at: "2026-10-01T19:00:00",
         runtime: "",
         year: null,
         note: "",
@@ -163,8 +163,7 @@
 
   function voteCutoffFor(screeningAt) {
     const d = new Date(screeningAt);
-    d.setDate(d.getDate() - 2);
-    return d;
+    return new Date(d.getTime() - 48 * 60 * 60 * 1000);
   }
 
   function formatCutoff(date) {
@@ -249,21 +248,66 @@
 
   async function getScreenings() {
     if (!isShared) return demo.screenings;
-    const { data, error } = await sb.from("screenings")
+
+    const { data, error } = await sb
+      .from("screenings")
       .select("*")
       .eq("is_past", false)
       .eq("is_cancelled", false)
       .order("screening_at")
       .limit(1);
+
     if (error) throw error;
-    return data;
+
+    return (data || []).map(row => {
+      const title = String(row.title || "").trim().toLowerCase();
+      const launchAt = "2026-10-01T19:00:00";
+      const rowTime = new Date(row.screening_at || 0);
+      const launchTime = new Date(launchAt);
+
+      // Old development rows used September dates. The first real screening
+      // is fixed at 1 October 2026, 7:00 PM.
+      const correctedDate = rowTime < launchTime ? launchAt : row.screening_at;
+
+      // Development seed only. Never show it as a genuine selected film.
+      if (title.includes("nice guys")) {
+        return {
+          ...row,
+          screening_at: correctedDate,
+          title: "TBC",
+          runtime: null,
+          year: null,
+          note: null,
+          poster_url: null,
+          curator: null
+        };
+      }
+
+      return {
+        ...row,
+        screening_at: correctedDate
+      };
+    });
   }
 
   async function getArchive() {
     if (!isShared) return demo.archived;
-    const { data, error } = await sb.from("screenings").select("*").eq("is_past", true).order("screening_at", { ascending: false });
+
+    const { data, error } = await sb
+      .from("screenings")
+      .select("*")
+      .eq("is_past", true)
+      .order("screening_at", { ascending: false });
+
     if (error) throw error;
-    return data;
+
+    // Non Event's first real screening is 1 October 2026.
+    // Older rows were demo seed data from development and must never appear publicly.
+    const launch = new Date("2026-10-01T00:00:00");
+    return (data || []).filter(row => {
+      const when = new Date(row.screened_at || row.screening_at || 0);
+      return when >= launch;
+    });
   }
 
   async function getRsvps() {
@@ -293,38 +337,55 @@
 
   function isUndecidedScreening(s) {
     const title = String(s?.title || "").trim().toLowerCase();
-    const placeholders = ["", "tbc", "tbd", "to be decided", "you decide", "undecided"];
 
-    // Also treat the original launch demo row as undecided so existing
-    // Supabase projects do not show The Nice Guys as a real selection.
-    const date = String(s?.screening_at || "");
-    const isOldLaunchDemo = title === "the nice guys" && date.startsWith("2026-10-01");
-
-    return placeholders.includes(title) || isOldLaunchDemo;
+    return (
+      ["", "tbc", "tbd", "to be decided", "you decide", "undecided"].includes(title) ||
+      title.includes("nice guys")
+    );
   }
 
   async function renderScreenings() {
     const [screenings, rsvps] = await Promise.all([getScreenings(), getRsvps()]);
     if (!screenings.length) {
-      screeningGrid.innerHTML = `<p class="empty">No screenings have been announced yet.</p>`;
+      screeningGrid.innerHTML = `
+        <article class="screening-card screening-card-undecided">
+          <div class="undecided-date">
+            <span class="date-chip">Thu 1 Oct 2026 · 7:00 PM</span>
+          </div>
+          <div class="undecided-copy">
+            <h3>You decide.</h3>
+            <p>The first film hasn&#39;t been chosen yet.</p>
+            <a class="poll-link" href="#recommendations">Vote for the film →</a>
+          </div>
+        </article>`;
       return;
     }
 
     const cards = await Promise.all(screenings.map(async s => {
       if (isUndecidedScreening(s)) {
+        const going = rsvps.filter(r => String(r.screening_id) === String(s.id) && r.status === "going");
+        const mine = rsvps.find(r => String(r.screening_id) === String(s.id) && r.user_name === user);
+
         return `
           <article class="screening-card screening-card-undecided">
             <div class="undecided-date">
-              <span class="date-chip">${esc(prettyDate(s.screening_at))}</span>
+              <span class="date-chip">Thu 1 Oct 2026 · 7:00 PM</span>
             </div>
             <div class="undecided-copy">
-              <p class="eyebrow">NEXT SCREENING</p>
               <h3>You decide.</h3>
-              <p>The film hasn&#39;t been chosen yet.</p>
+              <p>The first film hasn&#39;t been chosen yet.</p>
               <a class="poll-link" href="#recommendations">Vote for the film →</a>
+              <div class="attendee-line undecided-attendees">
+                <strong>${going.length} attending</strong>
+                ${going.length ? ` · ${going.map(x => esc(x.user_name)).join(", ")}` : " · Be the first to commit."}
+              </div>
+              <button class="rsvp-btn" data-rsvp="${esc(s.id)}">
+                ${mine ? `RSVP: ${mine.status.replace("_"," ")}` : "RSVP"}
+              </button>
             </div>
           </article>`;
       }
+
 
       const going = rsvps.filter(r => String(r.screening_id) === String(s.id) && r.status === "going");
       const mine = rsvps.find(r => String(r.screening_id) === String(s.id) && r.user_name === user);
@@ -371,6 +432,29 @@
     });
   });
 
+  function normUserName(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function voterNames(row) {
+    const raw = row?.voters;
+    if (Array.isArray(raw)) return raw.map(v => String(v || "").trim()).filter(Boolean);
+
+    // Be tolerant if Postgres / an older migration happens to return JSON text.
+    if (typeof raw === "string" && raw.trim()) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed.map(v => String(v || "").trim()).filter(Boolean);
+      } catch {}
+    }
+    return [];
+  }
+
+  function hasUserVoted(row, userName) {
+    const wanted = normUserName(userName);
+    return Boolean(wanted) && voterNames(row).some(v => normUserName(v) === wanted);
+  }
+
   async function getRecommendations() {
     if (!isShared) return read("recommendations", [
       { id: "r1", title: "Heat", reason: "Because we somehow still haven't done it.", user_name: "MG", votes: 2, voters: ["MG","KJ"], is_active: true },
@@ -392,19 +476,50 @@
       showToast("Voting is closed for the next screening.");
       return false;
     }
+
+    // One active recommendation per person at a time.
+    const activeRows = await getRecommendations();
+    const alreadyHasOne = activeRows.some(r =>
+      String(r.user_name || "").trim().toLowerCase() === String(user || "").trim().toLowerCase()
+    );
+
+    if (alreadyHasOne) {
+      showToast("You already have an active recommendation.");
+      return false;
+    }
+
     if (!isShared) {
-      const rows = (await getRecommendations()).filter(r => r.is_active !== false);
-      rows.push({ id: crypto.randomUUID(), title, reason, poster_url: posterUrl, user_name: user, votes: 0, voters: [], is_active: true });
+      const rows = activeRows.filter(r => r.is_active !== false);
+      rows.push({ id: crypto.randomUUID(), title, reason, poster_url: posterUrl, user_name: user, votes: 1, voters: [user], is_active: true });
       write("recommendations", rows);
     } else {
-      const { error } = await sb.from("recommendations").insert({
+      const { data: inserted, error } = await sb.from("recommendations").insert({
         title,
         reason,
         poster_url: posterUrl || null,
         user_name: user,
         is_active: true
-      });
-      if (error) throw error;
+      }).select("id").single();
+
+      if (error) {
+        // Database constraint also enforces one active recommendation per person.
+        if (error.code === "23505") {
+          showToast("You already have an active recommendation.");
+          return false;
+        }
+        throw error;
+      }
+
+      // A nomination automatically includes the nominator's own vote.
+      if (inserted?.id) {
+        const { error: autoVoteError } = await sb.rpc("toggle_recommendation_vote", {
+          rec_id: inserted.id,
+          voter_name: user
+        });
+        if (autoVoteError) {
+          console.warn("Recommendation saved, but automatic self-vote failed:", autoVoteError);
+        }
+      }
     }
     return true;
   }
@@ -420,8 +535,8 @@
       const rows = await getRecommendations();
       const row = rows.find(r => String(r.id) === String(id));
       row.voters ||= [];
-      const has = row.voters.includes(user);
-      row.voters = has ? row.voters.filter(v => v !== user) : [...row.voters, user];
+      const has = row.voters.some(v => normUserName(v) === normUserName(user));
+      row.voters = has ? row.voters.filter(v => normUserName(v) !== normUserName(user)) : [...row.voters, user];
       row.votes = row.voters.length;
       write("recommendations", rows);
     } else {
@@ -435,17 +550,27 @@
     const rows = await getRecommendations();
     rows.sort((a,b) => (b.votes || 0) - (a.votes || 0));
     recCount.textContent = `${rows.length} suggestion${rows.length === 1 ? "" : "s"}`;
+
     recommendationList.innerHTML = rows.length ? rows.map((r, i) => {
-      const voted = !isShared && (r.voters || []).includes(user);
+      const voters = voterNames(r);
+      const voted = hasUserVoted(r, user);
+      const voterLine = voters.length ? voters.map(esc).join(", ") : "—";
+
       return `
-      <article class="recommendation-item">
+      <article class="recommendation-item" data-rec-id="${esc(r.id)}">
         <div class="rec-rank">${String(i+1).padStart(2,"0")}</div>
         <div>
           <div class="rec-title">${esc(r.title)}</div>
           <div class="rec-reason">${esc(r.reason || "No pitch submitted. Bold strategy.")}</div>
           <div class="rec-by">NOMINATED BY ${esc(r.user_name || "ANON")}</div>
+          <div class="rec-voters">VOTED BY ${voterLine}</div>
         </div>
-        <button class="vote-btn ${voted ? "voted" : ""}" data-vote="${esc(r.id)}">▲ ${Number(r.votes || 0)}</button>
+        <button
+          class="vote-btn ${voted ? "voted" : ""}"
+          data-vote="${esc(r.id)}"
+          aria-pressed="${voted ? "true" : "false"}"
+          title="${voted ? "You voted for this film" : "Vote for this film"}"
+        >▲ ${Number(r.votes || 0)}</button>
       </article>`;
     }).join("") : `<p class="empty">No suggestions yet. The programming committee is alarmingly quiet.</p>`;
 

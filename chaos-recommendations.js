@@ -92,9 +92,82 @@
   `;
   document.head.appendChild(style);
 
+  const interactionStyle = document.createElement("style");
+  interactionStyle.textContent = `
+
+    .recommendation-item .rec-voters {
+      margin-top: 3px;
+      color: #333;
+      font: 8px/1.25 "Courier New", monospace;
+      text-transform: uppercase;
+      overflow-wrap: anywhere;
+    }
+
+    .recommendation-item .vote-btn.voted {
+      background: #d8cf00 !important;
+      border-style: inset !important;
+      border-width: 3px !important;
+      box-shadow:
+        inset 2px 2px 0 #555,
+        inset -1px -1px 0 #fff !important;
+      transform: translate(1px, 1px);
+      filter: saturate(.8) brightness(.94);
+    }
+
+    .rec-form-window {
+      display: flex !important;
+      flex-direction: column !important;
+      align-self: stretch !important;
+    }
+
+    .rec-form-window > .window-body {
+      flex: 1 1 auto !important;
+      display: flex !important;
+      flex-direction: column !important;
+      min-height: 0;
+    }
+
+    .pile-facts {
+      flex: 1 1 auto;
+      min-height: 150px;
+      margin-top: 12px;
+      padding: 8px;
+      background: #c0c0c0;
+      border: 3px inset #fff;
+      color: #000;
+      overflow: hidden;
+    }
+
+    .pile-facts-title {
+      margin: -8px -8px 7px;
+      padding: 5px 7px;
+      color: #fff;
+      background: #000080;
+      font: bold 10px/1 "Courier New", monospace;
+      text-transform: uppercase;
+    }
+
+    .pile-fact {
+      margin: 0 0 7px;
+      padding: 6px;
+      background: #ffffcc;
+      border: 1px solid #777;
+      font: 9px/1.3 "Courier New", monospace;
+    }
+
+    .pile-fact:last-child { margin-bottom: 0; }
+    .pile-fact strong {
+      display: block;
+      margin-bottom: 2px;
+      color: #000080;
+      text-transform: uppercase;
+    }
+`;
+  document.head.appendChild(interactionStyle);
+
   const STOPWORDS = new Set(["the"]);
   const imageCacheKey = "ne_chaos_fake_poster_cache_v3";
-  const creditsCacheKey = "ne_chaos_movie_credits_cache_v4";
+  const creditsCacheKey = "ne_chaos_movie_credits_cache_v5";
 
   function readCache(key) {
     try { return JSON.parse(localStorage.getItem(key)) || {}; }
@@ -227,7 +300,8 @@
 
     const aliases = {
       "basil the great mouse detective": "The Great Mouse Detective",
-      "basil great mouse detective": "The Great Mouse Detective"
+      "basil great mouse detective": "The Great Mouse Detective",
+      "about time": "About Time (2013 film)"
     };
 
     return aliases[normalised] || String(title || "").trim();
@@ -337,6 +411,101 @@
     cache[key]=result; writeCache(creditsCacheKey,cache); return result;
   }
 
+  const factsCacheKey = "ne_chaos_pile_facts_v1";
+
+  async function wikipediaIntro(pageTitle) {
+    const key = String(pageTitle || "").toLowerCase();
+    const cache = readCache(factsCacheKey);
+    if (Object.prototype.hasOwnProperty.call(cache, key)) return cache[key];
+
+    let extract = "";
+    try {
+      const params = new URLSearchParams({
+        action: "query",
+        titles: pageTitle,
+        prop: "extracts",
+        exintro: "1",
+        explaintext: "1",
+        exsentences: "1",
+        redirects: "1",
+        format: "json",
+        origin: "*"
+      });
+      const response = await fetch(`https://en.wikipedia.org/w/api.php?${params}`);
+      const data = await response.json();
+      const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
+      extract = String(pages[0]?.extract || "").trim();
+    } catch (error) {
+      console.warn("Movie trivia lookup failed:", error);
+    }
+
+    cache[key] = extract;
+    writeCache(factsCacheKey, cache);
+    return extract;
+  }
+
+  function shortenFact(text, max = 190) {
+    const clean = String(text || "").replace(/\s+/g, " ").trim();
+    if (clean.length <= max) return clean;
+    const cut = clean.slice(0, max);
+    const lastSpace = cut.lastIndexOf(" ");
+    return `${cut.slice(0, lastSpace > 120 ? lastSpace : max).trim()}…`;
+  }
+
+  function ensureFactsPanel() {
+    const body = document.querySelector(".rec-form-window > .window-body");
+    if (!body) return null;
+    let panel = body.querySelector(".pile-facts");
+    if (panel) return panel;
+
+    panel = document.createElement("div");
+    panel.className = "pile-facts";
+    panel.innerHTML = `<div class="pile-facts-title">★ PILE TRIVIA DATABASE ★</div><div class="pile-facts-body">LOADING EXTREMELY IMPORTANT FILM FACTS...</div>`;
+    body.appendChild(panel);
+    return panel;
+  }
+
+  let factsRequest = 0;
+  async function refreshPileFacts() {
+    const panel = ensureFactsPanel();
+    if (!panel) return;
+
+    const titles = [...list.querySelectorAll(".rec-title")]
+      .map(el => el.textContent.trim())
+      .filter(Boolean);
+
+    const signature = titles.join("|");
+    if (!titles.length) {
+      panel.querySelector(".pile-facts-body").innerHTML = `<div class="pile-fact">NO FILMS = NO FACTS. THIS IS A CRISIS.</div>`;
+      panel.dataset.signature = "";
+      return;
+    }
+    if (panel.dataset.signature === signature) return;
+
+    panel.dataset.signature = signature;
+    const requestId = ++factsRequest;
+    const facts = await Promise.all(titles.map(async title => {
+      const credits = await movieCredits(title);
+      const matched = credits.matchedTitle || canonicalMovieTitle(title) || title;
+      const intro = await wikipediaIntro(matched);
+
+      let fact = shortenFact(intro);
+      if (!fact && credits.director) {
+        const cast = credits.cast?.length ? ` Starring ${credits.cast.join(" and ")}.` : "";
+        fact = `Directed by ${credits.director}.${cast}`;
+      }
+      if (!fact) fact = "The internet has declined to provide a useful fact about this film.";
+      return { title, fact };
+    }));
+
+    if (requestId !== factsRequest || !panel.isConnected) return;
+    panel.querySelector(".pile-facts-body").innerHTML = facts.map(({title, fact}) => `
+      <div class="pile-fact">
+        <strong>${escapeHtml(title)}</strong>
+        ${escapeHtml(fact)}
+      </div>`).join("");
+  }
+
   function ensureCopy(card) {
     let copy=card.querySelector(":scope > .rec-copy");
     if (copy) return copy;
@@ -397,11 +566,16 @@
   let timer=null;
   function scan() {
     clearTimeout(timer);
-    timer=setTimeout(()=>list.querySelectorAll(".recommendation-item").forEach(enhanceCard),30);
+    timer=setTimeout(() => {
+      list.querySelectorAll(".recommendation-item").forEach(enhanceCard);
+      refreshPileFacts();
+    },30);
   }
 
   new MutationObserver(scan).observe(list,{childList:true,subtree:false});
   scan();
+  ensureFactsPanel();
+  setTimeout(refreshPileFacts, 250);
 
   // ----------------------------------------------------------
   // Login / RSVP popup close fix
