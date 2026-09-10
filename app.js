@@ -436,18 +436,51 @@
     return String(value || "").trim().toLowerCase();
   }
 
-  function voterNames(row) {
-    const raw = row?.voters;
-    if (Array.isArray(raw)) return raw.map(v => String(v || "").trim()).filter(Boolean);
+  const VOTE_NAMES_TABLE = "recommendation_vote_names";
 
-    // Be tolerant if Postgres / an older migration happens to return JSON text.
+  function rawVoterNames(row) {
+    const raw = row?._voters ?? row?.voters;
+
+    if (Array.isArray(raw)) {
+      return raw.map(v => String(v || "").trim()).filter(Boolean);
+    }
+
     if (typeof raw === "string" && raw.trim()) {
       try {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) return parsed.map(v => String(v || "").trim()).filter(Boolean);
+        if (Array.isArray(parsed)) {
+          return parsed.map(v => String(v || "").trim()).filter(Boolean);
+        }
       } catch {}
     }
+
     return [];
+  }
+
+  function uniqueNames(values) {
+    const seen = new Set();
+    const result = [];
+
+    for (const value of values || []) {
+      const clean = String(value || "").trim();
+      const key = normUserName(clean);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      result.push(clean);
+    }
+    return result;
+  }
+
+  function voterNames(row) {
+    const names = rawVoterNames(row);
+
+    // The site rule is now that nominating a film includes your own vote.
+    // For old rows created before named-vote logging existed, infer the
+    // nominator as one known voter so the line is never mysteriously blank.
+    const nominator = String(row?.user_name || "").trim();
+    if (nominator && Number(row?.votes || 0) > 0) names.push(nominator);
+
+    return uniqueNames(names);
   }
 
   function hasUserVoted(row, userName) {
@@ -455,32 +488,117 @@
     return Boolean(wanted) && voterNames(row).some(v => normUserName(v) === wanted);
   }
 
+  async function getNamedVoteRows(recommendationIds) {
+    if (!isShared || !recommendationIds?.length) return [];
+
+    try {
+      const { data, error } = await sb
+        .from(VOTE_NAMES_TABLE)
+        .select("recommendation_id,user_name,created_at")
+        .in("recommendation_id", recommendationIds);
+
+      if (error) {
+        // Keep the whole site usable if the SQL has not been run yet.
+        console.warn("Named vote table unavailable:", error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.warn("Named vote table unavailable:", error);
+      return [];
+    }
+  }
+
+  async function setNamedVote(recommendationId, userName, voted) {
+    if (!isShared) return;
+
+    try {
+      if (voted) {
+        const { error } = await sb
+          .from(VOTE_NAMES_TABLE)
+          .upsert(
+            {
+              recommendation_id: recommendationId,
+              user_name: String(userName || "").trim(),
+              created_at: new Date().toISOString()
+            },
+            { onConflict: "recommendation_id,user_name" }
+          );
+
+        if (error) console.warn("Could not record voter name:", error);
+      } else {
+        const { error } = await sb
+          .from(VOTE_NAMES_TABLE)
+          .delete()
+          .eq("recommendation_id", recommendationId)
+          .ilike("user_name", String(userName || "").trim());
+
+        if (error) console.warn("Could not remove voter name:", error);
+      }
+    } catch (error) {
+      console.warn("Could not update named vote:", error);
+    }
+  }
+
+  async function recommendationVoteCount(id) {
+    try {
+      const { data, error } = await sb
+        .from("recommendations")
+        .select("votes")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      return Number(data?.votes || 0);
+    } catch {
+      return null;
+    }
+  }
+
   async function getRecommendations() {
     if (!isShared) return read("recommendations", [
       { id: "r1", title: "Heat", reason: "Because we somehow still haven't done it.", user_name: "MG", votes: 2, voters: ["MG","KJ"], is_active: true },
       { id: "r2", title: "The Raid", reason: "Minimal plot. Maximum stairs.", user_name: "BT", votes: 1, voters: ["BT"], is_active: true }
     ]);
-    const { data, error } = await sb.from("recommendations")
+
+    const { data, error } = await sb
+      .from("recommendations")
       .select("*")
       .eq("is_active", true)
       .order("votes", { ascending: false })
       .order("created_at");
+
     if (error) throw error;
-    return data;
+
+    const rows = data || [];
+    const namedVotes = await getNamedVoteRows(rows.map(row => row.id));
+    const byRecommendation = new Map();
+
+    for (const vote of namedVotes) {
+      const key = String(vote.recommendation_id);
+      if (!byRecommendation.has(key)) byRecommendation.set(key, []);
+      byRecommendation.get(key).push(vote.user_name);
+    }
+
+    return rows.map(row => ({
+      ...row,
+      _voters: byRecommendation.get(String(row.id)) || []
+    }));
   }
 
   async function addRecommendation(title, reason, posterUrl) {
     if (!requireUser("recommend")) return false;
+
     const voting = await votingIsOpen();
     if (!voting.open) {
       showToast("Voting is closed for the next screening.");
       return false;
     }
 
-    // One active recommendation per person at a time.
     const activeRows = await getRecommendations();
     const alreadyHasOne = activeRows.some(r =>
-      String(r.user_name || "").trim().toLowerCase() === String(user || "").trim().toLowerCase()
+      normUserName(r.user_name) === normUserName(user)
     );
 
     if (alreadyHasOne) {
@@ -490,59 +608,110 @@
 
     if (!isShared) {
       const rows = activeRows.filter(r => r.is_active !== false);
-      rows.push({ id: crypto.randomUUID(), title, reason, poster_url: posterUrl, user_name: user, votes: 1, voters: [user], is_active: true });
+      rows.push({
+        id: crypto.randomUUID(),
+        title,
+        reason,
+        poster_url: posterUrl,
+        user_name: user,
+        votes: 1,
+        voters: [user],
+        is_active: true
+      });
       write("recommendations", rows);
-    } else {
-      const { data: inserted, error } = await sb.from("recommendations").insert({
+      return true;
+    }
+
+    const { data: inserted, error } = await sb
+      .from("recommendations")
+      .insert({
         title,
         reason,
         poster_url: posterUrl || null,
         user_name: user,
         is_active: true
-      }).select("id").single();
+      })
+      .select("id,votes")
+      .single();
 
-      if (error) {
-        // Database constraint also enforces one active recommendation per person.
-        if (error.code === "23505") {
-          showToast("You already have an active recommendation.");
-          return false;
-        }
-        throw error;
+    if (error) {
+      if (error.code === "23505") {
+        showToast("You already have an active recommendation.");
+        return false;
       }
+      throw error;
+    }
 
-      // A nomination automatically includes the nominator's own vote.
-      if (inserted?.id) {
-        const { error: autoVoteError } = await sb.rpc("toggle_recommendation_vote", {
-          rec_id: inserted.id,
-          voter_name: user
-        });
-        if (autoVoteError) {
-          console.warn("Recommendation saved, but automatic self-vote failed:", autoVoteError);
-        }
+    if (inserted?.id) {
+      // New recommendations start with the nominator's own vote.
+      const before = Number(inserted.votes || 0);
+      const { error: voteError } = await sb.rpc("toggle_recommendation_vote", {
+        rec_id: inserted.id,
+        voter_name: user
+      });
+
+      if (voteError) {
+        console.warn("Recommendation saved, but automatic self-vote failed:", voteError);
+      } else {
+        const after = await recommendationVoteCount(inserted.id);
+        // A brand-new recommendation should increase from 0 -> 1.
+        // Record the name even if the RPC does not return its state.
+        await setNamedVote(inserted.id, user, after === null ? true : after >= before);
       }
     }
+
     return true;
   }
 
   async function voteRecommendation(id) {
     if (!requireUser("vote")) return;
+
     const voting = await votingIsOpen();
     if (!voting.open) {
       showToast("Voting is closed for the next screening.");
       return;
     }
+
     if (!isShared) {
       const rows = await getRecommendations();
       const row = rows.find(r => String(r.id) === String(id));
       row.voters ||= [];
+
       const has = row.voters.some(v => normUserName(v) === normUserName(user));
-      row.voters = has ? row.voters.filter(v => normUserName(v) !== normUserName(user)) : [...row.voters, user];
+      row.voters = has
+        ? row.voters.filter(v => normUserName(v) !== normUserName(user))
+        : [...row.voters, user];
+
       row.votes = row.voters.length;
       write("recommendations", rows);
-    } else {
-      const { data, error } = await sb.rpc("toggle_recommendation_vote", { rec_id: id, voter_name: user });
-      if (error) throw error;
+      await renderRecommendations();
+      return;
     }
+
+    // Compare the numeric count before/after the existing RPC.
+    // This tells us whether the user's final state is ON or OFF, including
+    // for someone who cast an old vote before named-vote logging existed.
+    const before = await recommendationVoteCount(id);
+
+    const { error } = await sb.rpc("toggle_recommendation_vote", {
+      rec_id: id,
+      voter_name: user
+    });
+
+    if (error) throw error;
+
+    const after = await recommendationVoteCount(id);
+
+    if (before !== null && after !== null) {
+      if (after > before) await setNamedVote(id, user, true);
+      if (after < before) await setNamedVote(id, user, false);
+    } else {
+      // Fallback only if the count could not be read.
+      const rows = await getRecommendations();
+      const row = rows.find(r => String(r.id) === String(id));
+      await setNamedVote(id, user, !hasUserVoted(row, user));
+    }
+
     await renderRecommendations();
   }
 
@@ -554,7 +723,17 @@
     recommendationList.innerHTML = rows.length ? rows.map((r, i) => {
       const voters = voterNames(r);
       const voted = hasUserVoted(r, user);
-      const voterLine = voters.length ? voters.map(esc).join(", ") : "—";
+      const totalVotes = Math.max(Number(r.votes || 0), voters.length);
+      const earlierVotes = Math.max(0, totalVotes - voters.length);
+
+      const knownNames = voters.length ? voters.map(esc).join(", ") : "";
+      const earlierText = earlierVotes
+        ? `${knownNames ? " + " : ""}${earlierVotes} EARLIER VOTE${earlierVotes === 1 ? "" : "S"}`
+        : "";
+
+      const voterLine = knownNames || earlierText
+        ? `${knownNames}${earlierText}`
+        : "NO VOTES YET";
 
       return `
       <article class="recommendation-item" data-rec-id="${esc(r.id)}">
@@ -569,8 +748,8 @@
           class="vote-btn ${voted ? "voted" : ""}"
           data-vote="${esc(r.id)}"
           aria-pressed="${voted ? "true" : "false"}"
-          title="${voted ? "You voted for this film" : "Vote for this film"}"
-        >▲ ${Number(r.votes || 0)}</button>
+          title="${voted ? "You voted for this film — click to remove vote" : "Vote for this film"}"
+        >${voted ? "✓" : "▲"} ${totalVotes}</button>
       </article>`;
     }).join("") : `<p class="empty">No suggestions yet. The programming committee is alarmingly quiet.</p>`;
 
