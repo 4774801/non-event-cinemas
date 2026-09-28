@@ -703,6 +703,18 @@
       return;
     }
 
+    // Your own recommendation always carries your self-vote.
+    // Do not allow that vote to be toggled off.
+    const currentRows = await getRecommendations();
+    const currentRow = currentRows.find(r => String(r.id) === String(id));
+    if (
+      currentRow &&
+      normUserName(currentRow.user_name) === normUserName(user)
+    ) {
+      showToast("Your own recommendation always includes your vote.");
+      return;
+    }
+
     if (!isShared) {
       const rows = await getRecommendations();
       const row = rows.find(r => String(r.id) === String(id));
@@ -770,10 +782,17 @@
           <div class="rec-voters">VOTED BY ${voterLine}</div>
         </div>
         <button
-          class="vote-btn ${voted ? "voted" : ""}"
+          class="vote-btn ${voted ? "voted" : ""} ${normUserName(r.user_name) === normUserName(user) ? "self-vote-locked" : ""}"
           data-vote="${esc(r.id)}"
           aria-pressed="${voted ? "true" : "false"}"
-          title="${voted ? "You voted for this film — click to remove vote" : "Vote for this film"}"
+          aria-disabled="${normUserName(r.user_name) === normUserName(user) ? "true" : "false"}"
+          title="${
+            normUserName(r.user_name) === normUserName(user)
+              ? "Your recommendation automatically includes your vote"
+              : voted
+                ? "You voted for this film — click to remove vote"
+                : "Vote for this film"
+          }"
         >${voted ? "✓" : "▲"} ${totalVotes}</button>
       </article>`;
     }).join("") : `<p class="empty">No suggestions yet. The programming committee is alarmingly quiet.</p>`;
