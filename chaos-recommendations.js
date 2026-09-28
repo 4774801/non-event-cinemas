@@ -1,3 +1,6 @@
+// Highest-voted recommendation: top GIPHY result when NON_EVENT_CONFIG.GIPHY_API_KEY is set.
+// Without a GIPHY key, it falls back to the first matching animated GIF on Wikimedia Commons.
+// All other covers are assembled in-browser from existing real web imagery; no AI imagery is generated.
 (() => {
   const list = document.querySelector("#recommendationList");
   if (!list) return;
@@ -39,16 +42,120 @@
       white-space: nowrap;
     }
 
+    .recommendation-item .rec-media,
     .recommendation-item .fake-official-poster {
       grid-column: 2 !important;
       grid-row: 1 / span 2 !important;
       width: 78px !important;
       height: 100% !important;
       min-height: 112px;
-      object-fit: cover;
       align-self: stretch !important;
       border: 2px solid #000;
-      background: #ddd;
+      background: #111;
+      overflow: hidden;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .recommendation-item .rec-media > img,
+    .recommendation-item img.fake-official-poster {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      display: block;
+    }
+
+    .bootleg-cover::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(110deg, transparent 0 42%, rgba(255,255,255,.16) 45%, transparent 49%),
+        repeating-linear-gradient(0deg, rgba(0,0,0,.05) 0 1px, transparent 1px 3px);
+      mix-blend-mode: screen;
+    }
+
+    .bootleg-cover .bootleg-top {
+      position: absolute;
+      inset: 2px 2px auto;
+      z-index: 2;
+      padding: 2px 1px;
+      color: #fff;
+      background: #09009a;
+      border: 1px solid #fff;
+      text-align: center;
+      font: 900 7px/1 "Arial Black", Arial, sans-serif;
+      letter-spacing: .04em;
+    }
+
+    .bootleg-cover .bootleg-title {
+      position: absolute;
+      z-index: 2;
+      left: 2px;
+      right: 2px;
+      bottom: 3px;
+      padding: 3px 2px;
+      color: #fff800;
+      background: rgba(150,0,0,.9);
+      border: 1px solid #fff;
+      text-align: center;
+      text-shadow: 1px 1px #000;
+      font: 900 8px/.95 "Arial Black", Impact, sans-serif;
+      text-transform: uppercase;
+      overflow-wrap: anywhere;
+    }
+
+    .bootleg-cover .bootleg-sticker {
+      position: absolute;
+      z-index: 3;
+      right: -3px;
+      top: 32%;
+      padding: 3px 4px;
+      color: #000;
+      background: #ff0;
+      border: 1px solid #000;
+      transform: rotate(8deg);
+      font: 900 7px/1 "Arial Black", sans-serif;
+    }
+
+    .bootleg-cover .bootleg-side {
+      position: absolute;
+      z-index: 2;
+      left: 2px;
+      top: 22px;
+      padding: 2px;
+      color: #fff;
+      background: #000;
+      border: 1px solid #fff;
+      font: 700 6px/1 "Courier New", monospace;
+    }
+
+    .top-gif-card {
+      background: #000 !important;
+      border: 3px ridge #ff00ff !important;
+    }
+
+    .top-gif-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .top-gif-card .gif-badge {
+      position: absolute;
+      z-index: 3;
+      left: 2px;
+      right: 2px;
+      bottom: 2px;
+      padding: 2px 1px;
+      color: #000;
+      background: #00ff00;
+      border: 1px solid #fff;
+      text-align: center;
+      font: 900 7px/1 "Arial Black", sans-serif;
+      text-transform: uppercase;
     }
 
     .recommendation-item .rec-copy {
@@ -85,6 +192,7 @@
         min-width: 48px !important;
       }
 
+      .recommendation-item .rec-media,
       .recommendation-item .fake-official-poster {
         width: 70px !important;
       }
@@ -193,6 +301,8 @@
   const STOPWORDS = new Set(["the"]);
   const imageCacheKey = "ne_chaos_fake_poster_cache_v3";
   const creditsCacheKey = "ne_chaos_movie_credits_cache_v5";
+  const gifCacheKey = "ne_chaos_top_gif_cache_v1";
+  const referenceImageCacheKey = "ne_chaos_reference_image_cache_v1";
 
   function readCache(key) {
     try { return JSON.parse(localStorage.getItem(key)) || {}; }
@@ -236,6 +346,152 @@
       console.warn("Fake Commons poster lookup failed:",e);
     }
     cache[key]=url; writeCache(imageCacheKey,cache); return url;
+  }
+
+  async function movieReferenceImage(title) {
+    const key = String(title || "").toLowerCase();
+    const cache = readCache(referenceImageCacheKey);
+    if (Object.prototype.hasOwnProperty.call(cache, key)) return cache[key];
+
+    let url = "";
+    try {
+      const canonical = canonicalMovieTitle(title) || title;
+      const params = new URLSearchParams({
+        action: "query",
+        generator: "search",
+        gsrsearch: `${canonical} film`,
+        gsrlimit: "3",
+        prop: "pageimages",
+        piprop: "thumbnail",
+        pithumbsize: "500",
+        format: "json",
+        origin: "*"
+      });
+      const response = await fetch(`https://en.wikipedia.org/w/api.php?${params}`);
+      const data = await response.json();
+      const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
+      const page = pages.find(p => p?.thumbnail?.source);
+      url = page?.thumbnail?.source || "";
+    } catch (error) {
+      console.warn("Movie reference image lookup failed:", error);
+    }
+
+    if (!url) url = await firstCommonsImage(title);
+    cache[key] = url;
+    writeCache(referenceImageCacheKey, cache);
+    return url;
+  }
+
+  async function firstCommonsGif(title) {
+    try {
+      const canonical = canonicalMovieTitle(title) || title;
+      const params = new URLSearchParams({
+        action: "query",
+        generator: "search",
+        gsrsearch: `${canonical} gif`,
+        gsrnamespace: "6",
+        gsrlimit: "12",
+        prop: "imageinfo",
+        iiprop: "url|mime",
+        iiurlwidth: "360",
+        format: "json",
+        origin: "*"
+      });
+      const response = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`);
+      const data = await response.json();
+      const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
+      const gif = pages
+        .sort((a,b)=>(a.index??999)-(b.index??999))
+        .find(page => String(page?.imageinfo?.[0]?.mime || "").toLowerCase() === "image/gif");
+      const info = gif?.imageinfo?.[0];
+      return info?.thumburl || info?.url || "";
+    } catch (error) {
+      console.warn("Commons GIF fallback failed:", error);
+      return "";
+    }
+  }
+
+  async function topMovieGif(title) {
+    const key = String(title || "").toLowerCase();
+    const cache = readCache(gifCacheKey);
+    if (Object.prototype.hasOwnProperty.call(cache, key)) return cache[key];
+
+    let url = "";
+    const giphyKey = String(window.NON_EVENT_CONFIG?.GIPHY_API_KEY || "").trim();
+
+    if (giphyKey) {
+      try {
+        const canonical = canonicalMovieTitle(title) || title;
+        const params = new URLSearchParams({
+          api_key: giphyKey,
+          q: `${canonical} movie`,
+          limit: "1",
+          offset: "0",
+          rating: "pg-13",
+          lang: "en",
+          bundle: "messaging_non_clips"
+        });
+        const response = await fetch(`https://api.giphy.com/v1/gifs/search?${params}`);
+        const data = await response.json();
+        const gif = data?.data?.[0];
+        url =
+          gif?.images?.fixed_width?.url ||
+          gif?.images?.downsized_medium?.url ||
+          gif?.images?.original?.url ||
+          "";
+      } catch (error) {
+        console.warn("GIPHY lookup failed:", error);
+      }
+    }
+
+    // No API key or no GIPHY hit: still give the #1 film an animated result
+    // using the first matching GIF from Wikimedia Commons.
+    if (!url) url = await firstCommonsGif(title);
+
+    cache[key] = url;
+    writeCache(gifCacheKey, cache);
+    return url;
+  }
+
+  function makeBootlegCover(title, imageUrl) {
+    const cover = document.createElement("div");
+    cover.className = "rec-media bootleg-cover";
+
+    if (imageUrl) {
+      const img = document.createElement("img");
+      img.src = imageUrl;
+      img.alt = `${title} bootleg video cover`;
+      img.referrerPolicy = "no-referrer";
+      cover.appendChild(img);
+    }
+
+    const editionWords = ["2 DISC", "DELUXE", "SPECIAL", "COLLECTOR'S", "WIDESCREEN"];
+    const seed = [...String(title)].reduce((n, ch) => n + ch.charCodeAt(0), 0);
+    const edition = editionWords[seed % editionWords.length];
+
+    cover.insertAdjacentHTML("beforeend", `
+      <div class="bootleg-top">VIDEO CD · ${escapeHtml(edition)} EDITION</div>
+      <div class="bootleg-side">PAL<br>5.1<br>DVD</div>
+      <div class="bootleg-sticker">£2.99</div>
+      <div class="bootleg-title">${escapeHtml(title)}</div>
+    `);
+    return cover;
+  }
+
+  function makeGifCard(title, gifUrl, fallbackImage) {
+    if (!gifUrl) return makeBootlegCover(title, fallbackImage);
+
+    const media = document.createElement("div");
+    media.className = "rec-media top-gif-card";
+
+    const img = document.createElement("img");
+    img.src = gifUrl;
+    img.alt = `${title} top GIF search result`;
+    img.referrerPolicy = "no-referrer";
+    media.appendChild(img);
+
+    media.insertAdjacentHTML("beforeend", `<div class="gif-badge">★ #1 FILM GIF ★</div>`);
+    return media;
   }
 
   async function wikidataLabels(ids) {
@@ -686,29 +942,29 @@
     if (!titleEl||!rank) return;
 
     const title=titleEl.textContent.trim();
-    if (!title || card.dataset.chaosEnhanced===title) return;
-    card.dataset.chaosEnhanced=title;
+    const isLeader = card === list.querySelector(".recommendation-item");
+    const signature = `${title}|${isLeader ? "gif" : "bootleg"}`;
+    if (!title || card.dataset.chaosEnhanced===signature) return;
+    card.dataset.chaosEnhanced=signature;
 
     const copy=ensureCopy(card);
     if (!copy) return;
 
-    card.querySelectorAll(":scope > .rec-poster, :scope > .fake-official-poster").forEach(el=>el.remove());
+    card.querySelectorAll(":scope > .rec-poster, :scope > .fake-official-poster, :scope > .rec-media").forEach(el=>el.remove());
     copy.querySelectorAll(".rec-meta-row").forEach(el=>el.remove());
 
-    const [imageUrl,credits]=await Promise.all([firstCommonsImage(title),movieCredits(title)]);
-    if (card.dataset.chaosEnhanced!==title || !card.isConnected) return;
+    const [imageUrl,credits,gifUrl]=await Promise.all([
+      movieReferenceImage(title),
+      movieCredits(title),
+      isLeader ? topMovieGif(title) : Promise.resolve("")
+    ]);
+    if (card.dataset.chaosEnhanced!==signature || !card.isConnected) return;
 
-    const poster=document.createElement(imageUrl?"img":"div");
-    poster.className="rec-poster fake-official-poster";
-    if (imageUrl) {
-      poster.src=imageUrl;
-      poster.alt=`${title} totally official poster`;
-      poster.referrerPolicy="no-referrer";
-    } else {
-      poster.className+=" rec-poster-empty";
-      poster.textContent="OFFICIAL POSTER MISSING";
-    }
-    rank.insertAdjacentElement("afterend",poster);
+    const media = isLeader
+      ? makeGifCard(title, gifUrl, imageUrl)
+      : makeBootlegCover(title, imageUrl);
+
+    rank.insertAdjacentElement("afterend", media);
 
     const reason=copy.querySelector(".rec-reason");
     const insertBefore=reason||copy.querySelector(".rec-by");

@@ -1,0 +1,9 @@
+OPTIONAL: better #1 GIF results
+
+The site works without this. It will fall back to Wikimedia Commons GIF search.
+
+If you want the #1 film to use GIPHY's top search result, create a GIPHY API key and add this line inside window.NON_EVENT_CONFIG in config.js:
+
+  GIPHY_API_KEY: "YOUR_KEY_HERE",
+
+Do not replace your existing Supabase settings. Just add the line alongside them.
