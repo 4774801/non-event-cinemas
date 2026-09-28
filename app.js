@@ -428,9 +428,8 @@
     });
   }
 
-  // RSVP buttons are deliberately handled at document level.
-  // This survives dialog re-renders and also works with the Chaos skin even
-  // if a button is missing its original data-status attribute.
+  // Robust RSVP.EXE handler. This is intentionally self-contained so it
+  // doesn't interfere with any recommendation/voting functions below.
   document.addEventListener("click", async (event) => {
     if (!rsvpDialog || !rsvpDialog.open) return;
 
@@ -446,30 +445,25 @@
 
     let status = "";
 
-    if (["going", "maybe", "not_going", "not-going", "no", "nope"].includes(rawStatus)) {
-      status = rawStatus;
+    if (rawStatus === "going") {
+      status = "going";
+    } else if (rawStatus === "maybe") {
+      status = "maybe";
+    } else if (["not_going", "not-going", "no", "nope"].includes(rawStatus)) {
+      status = "not_going";
     } else if (
       label.includes("i'm coming") ||
       label.includes("im coming") ||
-      label === "coming" ||
       label.includes("i am coming")
     ) {
       status = "going";
     } else if (label.includes("maybe")) {
       status = "maybe";
-    } else if (
-      label.includes("nope") ||
-      label.includes("not coming") ||
-      label === "no"
-    ) {
+    } else if (label.includes("nope") || label.includes("not coming")) {
       status = "not_going";
     }
 
     if (!status) return;
-
-    if (status === "not-going" || status === "no" || status === "nope") {
-      status = "not_going";
-    }
 
     event.preventDefault();
     event.stopPropagation();
@@ -478,8 +472,8 @@
       rsvpDialog.dataset.screeningId ||
       activeScreeningId;
 
-    // RSVP.EXE can be opened by the Chaos skin without going through the
-    // original data-rsvp handler. If so, resolve the current screening here.
+    // Chaos can open RSVP.EXE without the normal RSVP button handler.
+    // In that case, fetch the actual upcoming screening from Supabase.
     if (!screeningId) {
       try {
         const next = await getNextScreening();
@@ -490,12 +484,11 @@
           rsvpDialog.dataset.screeningId = screeningId;
         }
       } catch (error) {
-        console.error("Could not resolve current screening for RSVP:", error);
+        console.error("Could not resolve screening for RSVP:", error);
       }
     }
 
     if (!screeningId) {
-      console.error("RSVP click had no screening id after fallback lookup");
       alert("RSVP error: there is no upcoming screening record to RSVP to.");
       return;
     }
@@ -506,14 +499,98 @@
       await setRsvp(screeningId, status);
     } catch (error) {
       console.error("RSVP update failed:", error);
-
-      // Use an alert here rather than the normal toast because a toast can
-      // appear behind a modal dialog and look like nothing happened.
       alert(`RSVP could not be saved: ${error?.message || "database rejected the update"}`);
     } finally {
       btn.disabled = false;
     }
   }, true);
+
+  function normUserName(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  const VOTE_NAMES_TABLE = "recommendation_votes";
+
+  function rawVoterNames(row) {
+    const raw = row?._voters ?? row?.voters;
+
+    if (Array.isArray(raw)) {
+      return raw.map(v => String(v || "").trim()).filter(Boolean);
+    }
+
+    if (typeof raw === "string" && raw.trim()) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed.map(v => String(v || "").trim()).filter(Boolean);
+        }
+      } catch {}
+    }
+
+    return [];
+  }
+
+  function uniqueNames(values) {
+    const seen = new Set();
+    const result = [];
+
+    for (const value of values || []) {
+      const clean = String(value || "").trim();
+      const key = normUserName(clean);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      result.push(clean);
+    }
+    return result;
+  }
+
+  function voterNames(row) {
+    const names = rawVoterNames(row);
+
+    // The site rule is now that nominating a film includes your own vote.
+    // For old rows created before named-vote logging existed, infer the
+    // nominator as one known voter so the line is never mysteriously blank.
+    const nominator = String(row?.user_name || "").trim();
+    if (nominator && Number(row?.votes || 0) > 0) names.push(nominator);
+
+    return uniqueNames(names);
+  }
+
+  function hasUserVoted(row, userName) {
+    const wanted = normUserName(userName);
+    return Boolean(wanted) && voterNames(row).some(v => normUserName(v) === wanted);
+  }
+
+  async function getNamedVoteRows(recommendationIds) {
+    if (!isShared || !recommendationIds?.length) return [];
+
+    const { data, error } = await sb
+      .from("recommendation_votes")
+      .select("recommendation_id,user_name")
+      .in("recommendation_id", recommendationIds);
+
+    if (error) {
+      console.warn("Could not read recommendation_votes:", error);
+      return [];
+    }
+
+    return data || [];
+  }
+
+  async function recommendationVoteCount(id) {
+    try {
+      const { data, error } = await sb
+        .from("recommendations")
+        .select("votes")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      return Number(data?.votes || 0);
+    } catch {
+      return null;
+    }
+  }
 
   async function getRecommendations() {
     if (!isShared) return read("recommendations", [
