@@ -426,11 +426,34 @@
     });
   }
 
-  document.querySelectorAll("[data-status]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (activeScreeningId) setRsvp(activeScreeningId, btn.dataset.status);
+  // RSVP buttons live inside a dialog and the Chaos skin can alter/re-render
+  // dialog content. Delegate the click from the dialog itself so I'M COMING,
+  // MAYBE and NOPE always keep working.
+  if (rsvpDialog) {
+    rsvpDialog.addEventListener("click", async (event) => {
+      const btn = event.target.closest("[data-status]");
+      if (!btn || !rsvpDialog.contains(btn)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (!activeScreeningId) {
+        showToast("Could not find the screening for that RSVP.");
+        return;
+      }
+
+      btn.disabled = true;
+
+      try {
+        await setRsvp(activeScreeningId, btn.dataset.status);
+      } catch (error) {
+        console.error("RSVP update failed:", error);
+        showToast("Could not update RSVP.");
+      } finally {
+        btn.disabled = false;
+      }
     });
-  });
+  }
 
   function normUserName(value) {
     return String(value || "").trim().toLowerCase();
