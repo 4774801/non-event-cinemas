@@ -474,13 +474,29 @@
     event.preventDefault();
     event.stopPropagation();
 
-    const screeningId =
+    let screeningId =
       rsvpDialog.dataset.screeningId ||
       activeScreeningId;
 
+    // RSVP.EXE can be opened by the Chaos skin without going through the
+    // original data-rsvp handler. If so, resolve the current screening here.
     if (!screeningId) {
-      console.error("RSVP click had no screening id");
-      alert("RSVP error: could not identify the screening.");
+      try {
+        const next = await getNextScreening();
+        screeningId = next?.id || null;
+
+        if (screeningId) {
+          activeScreeningId = screeningId;
+          rsvpDialog.dataset.screeningId = screeningId;
+        }
+      } catch (error) {
+        console.error("Could not resolve current screening for RSVP:", error);
+      }
+    }
+
+    if (!screeningId) {
+      console.error("RSVP click had no screening id after fallback lookup");
+      alert("RSVP error: there is no upcoming screening record to RSVP to.");
       return;
     }
 
