@@ -330,7 +330,7 @@
       );
       if (error) throw error;
     }
-    rsvpDialog.close();
+    if (rsvpDialog?.open) rsvpDialog.close();
     showToast("RSVP updated.");
     await renderScreenings();
   }
@@ -419,6 +419,8 @@
       btn.addEventListener("click", () => {
         if (!requireUser("rsvp")) return;
         activeScreeningId = btn.dataset.rsvp;
+        rsvpDialog.dataset.screeningId = activeScreeningId;
+
         const screening = screenings.find(s => String(s.id) === String(activeScreeningId));
         $("#rsvpTitle").textContent = screening?.title || "RSVP";
         rsvpDialog.showModal();
@@ -426,121 +428,76 @@
     });
   }
 
-  // RSVP buttons live inside a dialog and the Chaos skin can alter/re-render
-  // dialog content. Delegate the click from the dialog itself so I'M COMING,
-  // MAYBE and NOPE always keep working.
-  if (rsvpDialog) {
-    rsvpDialog.addEventListener("click", async (event) => {
-      const btn = event.target.closest("[data-status]");
-      if (!btn || !rsvpDialog.contains(btn)) return;
+  // RSVP buttons are deliberately handled at document level.
+  // This survives dialog re-renders and also works with the Chaos skin even
+  // if a button is missing its original data-status attribute.
+  document.addEventListener("click", async (event) => {
+    if (!rsvpDialog || !rsvpDialog.open) return;
 
-      event.preventDefault();
-      event.stopPropagation();
+    const btn = event.target.closest("button");
+    if (!btn || !rsvpDialog.contains(btn)) return;
 
-      if (!activeScreeningId) {
-        showToast("Could not find the screening for that RSVP.");
-        return;
-      }
+    const rawStatus = String(btn.dataset.status || "").trim().toLowerCase();
+    const label = String(btn.textContent || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase()
+      .replace(/[’]/g, "'");
 
-      btn.disabled = true;
+    let status = "";
 
-      try {
-        await setRsvp(activeScreeningId, btn.dataset.status);
-      } catch (error) {
-        console.error("RSVP update failed:", error);
-        showToast("Could not update RSVP.");
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  }
-
-  function normUserName(value) {
-    return String(value || "").trim().toLowerCase();
-  }
-
-  const VOTE_NAMES_TABLE = "recommendation_votes";
-
-  function rawVoterNames(row) {
-    const raw = row?._voters ?? row?.voters;
-
-    if (Array.isArray(raw)) {
-      return raw.map(v => String(v || "").trim()).filter(Boolean);
+    if (["going", "maybe", "not_going", "not-going", "no", "nope"].includes(rawStatus)) {
+      status = rawStatus;
+    } else if (
+      label.includes("i'm coming") ||
+      label.includes("im coming") ||
+      label === "coming" ||
+      label.includes("i am coming")
+    ) {
+      status = "going";
+    } else if (label.includes("maybe")) {
+      status = "maybe";
+    } else if (
+      label.includes("nope") ||
+      label.includes("not coming") ||
+      label === "no"
+    ) {
+      status = "not_going";
     }
 
-    if (typeof raw === "string" && raw.trim()) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          return parsed.map(v => String(v || "").trim()).filter(Boolean);
-        }
-      } catch {}
+    if (!status) return;
+
+    if (status === "not-going" || status === "no" || status === "nope") {
+      status = "not_going";
     }
 
-    return [];
-  }
+    event.preventDefault();
+    event.stopPropagation();
 
-  function uniqueNames(values) {
-    const seen = new Set();
-    const result = [];
+    const screeningId =
+      rsvpDialog.dataset.screeningId ||
+      activeScreeningId;
 
-    for (const value of values || []) {
-      const clean = String(value || "").trim();
-      const key = normUserName(clean);
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      result.push(clean);
-    }
-    return result;
-  }
-
-  function voterNames(row) {
-    const names = rawVoterNames(row);
-
-    // The site rule is now that nominating a film includes your own vote.
-    // For old rows created before named-vote logging existed, infer the
-    // nominator as one known voter so the line is never mysteriously blank.
-    const nominator = String(row?.user_name || "").trim();
-    if (nominator && Number(row?.votes || 0) > 0) names.push(nominator);
-
-    return uniqueNames(names);
-  }
-
-  function hasUserVoted(row, userName) {
-    const wanted = normUserName(userName);
-    return Boolean(wanted) && voterNames(row).some(v => normUserName(v) === wanted);
-  }
-
-  async function getNamedVoteRows(recommendationIds) {
-    if (!isShared || !recommendationIds?.length) return [];
-
-    const { data, error } = await sb
-      .from("recommendation_votes")
-      .select("recommendation_id,user_name")
-      .in("recommendation_id", recommendationIds);
-
-    if (error) {
-      console.warn("Could not read recommendation_votes:", error);
-      return [];
+    if (!screeningId) {
+      console.error("RSVP click had no screening id");
+      alert("RSVP error: could not identify the screening.");
+      return;
     }
 
-    return data || [];
-  }
+    btn.disabled = true;
 
-  async function recommendationVoteCount(id) {
     try {
-      const { data, error } = await sb
-        .from("recommendations")
-        .select("votes")
-        .eq("id", id)
-        .single();
+      await setRsvp(screeningId, status);
+    } catch (error) {
+      console.error("RSVP update failed:", error);
 
-      if (error) throw error;
-      return Number(data?.votes || 0);
-    } catch {
-      return null;
+      // Use an alert here rather than the normal toast because a toast can
+      // appear behind a modal dialog and look like nothing happened.
+      alert(`RSVP could not be saved: ${error?.message || "database rejected the update"}`);
+    } finally {
+      btn.disabled = false;
     }
-  }
+  }, true);
 
   async function getRecommendations() {
     if (!isShared) return read("recommendations", [
