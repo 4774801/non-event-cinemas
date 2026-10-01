@@ -249,45 +249,34 @@
   async function getScreenings() {
     if (!isShared) return demo.screenings;
 
+    // Fetch all active screening rows rather than blindly taking the oldest.
+    // During development there were placeholder rows left in the table; if one
+    // of those still exists it must not hide the film selected in admin.
     const { data, error } = await sb
       .from("screenings")
       .select("*")
       .eq("is_past", false)
       .eq("is_cancelled", false)
-      .order("screening_at")
-      .limit(1);
+      .order("screening_at", { ascending: true });
 
     if (error) throw error;
 
-    return (data || []).map(row => {
-      const title = String(row.title || "").trim().toLowerCase();
-      const launchAt = "2026-10-01T19:00:00";
-      const rowTime = new Date(row.screening_at || 0);
-      const launchTime = new Date(launchAt);
+    const rows = data || [];
+    if (!rows.length) return [];
 
-      // Old development rows used September dates. The first real screening
-      // is fixed at 1 October 2026, 7:00 PM.
-      const correctedDate = rowTime < launchTime ? launchAt : row.screening_at;
+    const isPlaceholderTitle = (value) => {
+      const title = String(value || "").trim().toLowerCase();
+      return ["", "tbc", "tbd", "to be decided", "you decide", "undecided"].includes(title);
+    };
 
-      // Development seed only. Never show it as a genuine selected film.
-      if (title.includes("nice guys")) {
-        return {
-          ...row,
-          screening_at: correctedDate,
-          title: "TBC",
-          runtime: null,
-          year: null,
-          note: null,
-          poster_url: null,
-          curator: null
-        };
-      }
+    // Prefer a row that actually has a selected film. If several do, use the
+    // earliest one. Only fall back to a placeholder row if no selected film
+    // exists at all.
+    const selected =
+      rows.find(row => !isPlaceholderTitle(row.title)) ||
+      rows[0];
 
-      return {
-        ...row,
-        screening_at: correctedDate
-      };
-    });
+    return [selected];
   }
 
   async function getArchive() {
@@ -338,10 +327,7 @@
   function isUndecidedScreening(s) {
     const title = String(s?.title || "").trim().toLowerCase();
 
-    return (
-      ["", "tbc", "tbd", "to be decided", "you decide", "undecided"].includes(title) ||
-      title.includes("nice guys")
-    );
+    return ["", "tbc", "tbd", "to be decided", "you decide", "undecided"].includes(title);
   }
 
   async function renderScreenings() {
