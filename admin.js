@@ -108,6 +108,22 @@
     if (error) throw error;
   }
 
+  async function finalizeNightNow(id) {
+    if (!id) return;
+
+    if (!isShared) {
+      await markPast(id);
+      return;
+    }
+
+    const { data, error } = await sb.rpc("admin_finalize_screening", {
+      p_screening_id: Number(id)
+    });
+
+    if (error) throw error;
+    return data;
+  }
+
   async function closeRoundAndCarryForward(winnerId) {
     if (!isShared) {
       const rows = read("recommendations", []);
@@ -295,6 +311,32 @@
     if (!id) return;
     await markPast(id);
     await render();
+  });
+
+  $("#finalizeNightBtn").addEventListener("click", async () => {
+    const id = $("#screeningId").value;
+    if (!id) return;
+
+    const title = $("#filmTitle").value.trim() || "this screening";
+    if (!confirm(
+      `Finalise ${title} now?\n\nThis will close ratings, move it to Past Films, update stats/attendance, create the next fortnightly screening and open the next voting round.`
+    )) return;
+
+    const button = $("#finalizeNightBtn");
+    button.disabled = true;
+    button.textContent = "FINALISING...";
+
+    try {
+      await finalizeNightNow(id);
+      await render();
+      alert("Night finalised. The next voting round is now live.");
+    } catch (error) {
+      console.error(error);
+      alert(`Could not finalise night: ${error.message || "database error"}`);
+    } finally {
+      button.disabled = false;
+      button.textContent = "FINALISE NIGHT NOW";
+    }
   });
 
   $("#createNextDateBtn").addEventListener("click", async () => {

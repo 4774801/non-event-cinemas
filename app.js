@@ -345,9 +345,29 @@
     return new Date(start.getTime() + 60 * 60 * 1000);
   }
 
+  function londonDateKey(value) {
+    const d = value instanceof Date ? value : new Date(value);
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/London",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(d);
+
+    const map = Object.fromEntries(parts.map(p => [p.type, p.value]));
+    return `${map.year}-${map.month}-${map.day}`;
+  }
+
   function ratingsAreOpen(screening) {
     const unlock = ratingUnlockTime(screening);
-    return Boolean(unlock && Date.now() >= unlock.getTime());
+    if (!unlock || screening?.is_past) return false;
+
+    // Ratings are available only on the screening's UK calendar date:
+    // one hour after the film starts until midnight.
+    return (
+      Date.now() >= unlock.getTime() &&
+      londonDateKey(new Date()) === londonDateKey(screening.screening_at)
+    );
   }
 
   function currentRatingMarkup(screening, ratings) {
@@ -946,18 +966,44 @@
           <div class="archive-date">${esc(new Date(a.screened_at || a.screening_at).toLocaleDateString("en-GB", {day:"numeric",month:"short",year:"numeric"}))}</div>
           <h3>${esc(a.title)}</h3>
           <div class="meta">${esc(a.year || "")}</div>
-          <div class="rating-row" aria-label="Rate ${esc(a.title)}">
-            ${[1,2,3,4,5].map(n => `<button class="star ${n <= mine ? "active" : ""}" data-rate="${esc(a.id)}" data-score="${n}" aria-label="${n} stars">★</button>`).join("")}
-            <span class="rating-average">${avg}/5 · ${rs.length} rating${rs.length === 1 ? "" : "s"}</span>
+          <div class="rating-row rating-closed" aria-label="${esc(a.title)} final rating">
+            <span class="rating-average">${avg}/5 · ${rs.length} rating${rs.length === 1 ? "" : "s"} · RATING CLOSED</span>
           </div>
         </article>`;
       }));
       archiveGrid.innerHTML = cards.join("");
     }
 
-    document.querySelectorAll("[data-rate]").forEach(btn =>
-      btn.addEventListener("click", () => rateScreening(btn.dataset.rate, btn.dataset.score))
-    );
+
+  }
+
+  async function finalizeDueRound() {
+    if (!isShared) return false;
+
+    try {
+      const { data, error } = await sb.rpc("finalize_due_screening");
+      if (error) throw error;
+      return Boolean(data);
+    } catch (error) {
+      // The page still works if the SQL migration has not been installed yet.
+      console.warn("Automatic midnight rollover unavailable:", error);
+      return false;
+    }
+  }
+
+  function millisecondsUntilNextLocalMidnight() {
+    const now = new Date();
+    const next = new Date(now);
+    next.setHours(24, 0, 2, 0);
+    return Math.max(1000, next.getTime() - now.getTime());
+  }
+
+  function scheduleMidnightRollover() {
+    setTimeout(async () => {
+      await finalizeDueRound();
+      await renderAll();
+      scheduleMidnightRollover();
+    }, millisecondsUntilNextLocalMidnight());
   }
 
   async function renderAll() {
@@ -970,7 +1016,11 @@
     }
   }
 
-  renderAll();
+  (async () => {
+    await finalizeDueRound();
+    await renderAll();
+    scheduleMidnightRollover();
+  })();
 
   if (!isShared) {
     console.info("Non Event is running in local demo mode. Add Supabase credentials to config.js for shared data.");

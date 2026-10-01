@@ -256,6 +256,33 @@
     $("#filmRanking").innerHTML = rows.length ? rows.join("") : `<p class="empty">No films watched yet.</p>`;
   }
 
+  async function finalizeDueRound() {
+    if (!isShared) return false;
+    try {
+      const { data, error } = await sb.rpc("finalize_due_screening");
+      if (error) throw error;
+      return Boolean(data);
+    } catch (error) {
+      console.warn("Automatic midnight rollover unavailable on stats page:", error);
+      return false;
+    }
+  }
+
+  function millisecondsUntilNextLocalMidnight() {
+    const now = new Date();
+    const next = new Date(now);
+    next.setHours(24, 0, 2, 0);
+    return Math.max(1000, next.getTime() - now.getTime());
+  }
+
+  function scheduleMidnightRollover() {
+    setTimeout(async () => {
+      await finalizeDueRound();
+      await render();
+      scheduleMidnightRollover();
+    }, millisecondsUntilNextLocalMidnight());
+  }
+
   async function render() {
     try {
       const { archive, rsvps, ratings } = await loadData();
@@ -272,5 +299,9 @@
     }
   }
 
-  render();
+  (async () => {
+    await finalizeDueRound();
+    await render();
+    scheduleMidnightRollover();
+  })();
 })();

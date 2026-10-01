@@ -1,15 +1,34 @@
-Replace these 3 files:
-- app.js
-- chaos2000-state.js
-- chaos2000.css
+MIDNIGHT ROUND ROLLOVER
 
-No SQL needed.
+1. Replace these website files in GitHub:
+   - app.js
+   - chaos2000-state.js
+   - chaos2000.css
+   - index.html
+   - stats.js
+   - chaos2000-stats-state.js
+   - stats.html
+   - admin.js
+   - admin.html
 
-What it does:
-- The current film gets a 1–5 star rating control one hour after screening_at.
-- Tonight's 7:00 PM screening therefore unlocks at 8:00 PM.
-- If someone already has the page open, the stars appear automatically at 8.
-- One rating per username per screening; clicking another star updates it.
-- Shows average score + number of ratings.
-- Uses your existing ratings table.
-- Includes the corrected chaos2000-state.js so YOU DECIDE is not forced back.
+2. In Supabase > SQL Editor, run:
+   - midnight-rollover.sql
+
+WHAT HAPPENS
+- Rating opens one hour after film start (7 PM -> 8 PM).
+- Rating closes at UK midnight.
+- At midnight:
+  * current screening is marked past
+  * it appears in Past Films
+  * ratings become final/read-only
+  * attendance and ratings feed into Stats
+  * the next screening is created 14 days later as TBC if needed
+  * carried recommendations remain
+  * recommendation votes reset
+  * voting opens for the next film
+- If the homepage/stats page is already open, it refreshes the round automatically just after midnight.
+- If someone opens the site after midnight, it performs the rollover on load.
+
+ADMIN
+- FINALISE NIGHT NOW performs the exact same rollover early.
+- It requires the existing authenticated Supabase admin login.

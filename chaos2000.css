@@ -1597,3 +1597,9 @@ body {
 .current-film-rating .rating-row {
   margin-top: 0;
 }
+
+.rating-row.rating-closed {
+  opacity: .82;
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+}
