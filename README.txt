@@ -1,34 +1,31 @@
-MIDNIGHT ROUND ROLLOVER
+REAL FIRST FILM / STATS FIX
 
-1. Replace these website files in GitHub:
+1. Run cleanup-demo-history.sql ONCE in Supabase > SQL Editor.
+   It preserves the screening whose title contains "El Dorado" and deletes all
+   OTHER rows currently marked as past. The old schema seeded three fake past
+   films, which is why Stats showed 4 films.
+
+2. Replace these files in GitHub:
    - app.js
-   - chaos2000-state.js
-   - chaos2000.css
    - index.html
    - stats.js
-   - chaos2000-stats-state.js
    - stats.html
-   - admin.js
-   - admin.html
+   - chaos2000.css
 
-2. In Supabase > SQL Editor, run:
-   - midnight-rollover.sql
+You do not need to replace admin files for this fix.
 
-WHAT HAPPENS
-- Rating opens one hour after film start (7 PM -> 8 PM).
-- Rating closes at UK midnight.
-- At midnight:
-  * current screening is marked past
-  * it appears in Past Films
-  * ratings become final/read-only
-  * attendance and ratings feed into Stats
-  * the next screening is created 14 days later as TBC if needed
-  * carried recommendations remain
-  * recommendation votes reset
-  * voting opens for the next film
-- If the homepage/stats page is already open, it refreshes the round automatically just after midnight.
-- If someone opens the site after midnight, it performs the rollover on load.
-
-ADMIN
-- FINALISE NIGHT NOW performs the exact same rollover early.
-- It requires the existing authenticated Supabase admin login.
+CHANGES
+- Road to El Dorado will be the only Past Film.
+- Main page no longer has the old launch-date archive filter.
+- Attendance leaderboard shows EVERY attendee, not just three.
+- Equal attendance counts share the same rank.
+- Adds:
+  * Total ratings
+  * Community average
+  * Most loyal attendee(s)
+  * Easiest to please (highest personal average)
+  * Hardest to please (lowest personal average)
+  * Most prolific rater
+  * Most divisive film
+  * Existing screenings/watch time/best film/best curator/biggest crowd remain.
+- Stats page no longer says there are no completed screenings.

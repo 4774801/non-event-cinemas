@@ -166,7 +166,8 @@ begin
   set votes = 0
   where is_active = true;
 
-  delete from public.recommendation_votes;
+  delete from public.recommendation_votes
+  where recommendation_id is not null;
 
   return next_id;
 end;

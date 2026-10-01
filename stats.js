@@ -164,31 +164,54 @@
 
     rsvps
       .filter(r => r.status === "going" && completedIds.has(String(r.screening_id)))
-      .forEach(r => counts.set(r.user_name, (counts.get(r.user_name) || 0) + 1));
+      .forEach(r => {
+        const name = String(r.user_name || "").trim();
+        if (!name) return;
+        counts.set(name, (counts.get(name) || 0) + 1);
+      });
 
-    const top = [...counts.entries()]
+    const people = [...counts.entries()]
       .map(([name, count]) => ({
         name,
         count,
         rate: archive.length ? Math.round((count / archive.length) * 100) : 0
       }))
-      .sort((a,b) => b.count - a.count || a.name.localeCompare(b.name))
-      .slice(0, 3);
+      .sort((a,b) => b.count - a.count || a.name.localeCompare(b.name));
 
-    $("#attendancePodium").innerHTML = top.length ? top.map((person, i) => `
-      <article class="podium-card">
-        <div class="podium-place">${i + 1}</div>
-        <div>
-          <div class="podium-name">${esc(person.name)}</div>
-          <div class="podium-detail">${person.count} screening${person.count === 1 ? "" : "s"} · ${person.rate}% attendance</div>
-        </div>
-      </article>
-    `).join("") : `<p class="empty">No completed-screening attendance data yet.</p>`;
+    let lastCount = null;
+    let lastRank = 0;
+    people.forEach((person, index) => {
+      if (person.count !== lastCount) {
+        lastRank = index + 1;
+        lastCount = person.count;
+      }
+      person.rank = lastRank;
+    });
+
+    $("#attendancePodium").innerHTML = people.length ? `
+      <div class="attendance-leaderboard">
+        ${people.map(person => `
+          <article class="attendance-row ${person.rank === 1 ? "attendance-first" : ""}">
+            <div class="attendance-rank">${person.rank === 1 ? "★" : `#${person.rank}`}</div>
+            <div class="attendance-person">
+              <div class="podium-name">${esc(person.name)}</div>
+              <div class="podium-detail">
+                ${person.count}/${archive.length} screening${archive.length === 1 ? "" : "s"} · ${person.rate}% attendance
+              </div>
+            </div>
+            <div class="attendance-bar-wrap" aria-hidden="true">
+              <div class="attendance-bar" style="width:${Math.max(4, person.rate)}%"></div>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    ` : `<p class="empty">No completed-screening attendance data yet.</p>`;
   }
 
-  function renderRecords(archive, films) {
+  function renderRecords(archive, films, ratings, rsvps) {
     const rated = films.filter(f => f.avg !== null);
     const best = rated.length ? [...rated].sort((a,b) => b.avg - a.avg)[0] : null;
+
     const curatorGroups = new Map();
     rated.filter(f => f.curator).forEach(f => {
       const key = f.curator;
@@ -196,23 +219,100 @@
       group.push(f.avg);
       curatorGroups.set(key, group);
     });
+
     const curatorScores = [...curatorGroups.entries()].map(([name, scores]) => ({
       name,
       films: scores.length,
       avg: scores.reduce((a,b) => a + b, 0) / scores.length
     }));
-    const bestCurator = curatorScores.length
-      ? curatorScores.sort((a,b) => b.avg - a.avg || b.films - a.films)[0]
-      : null;
-    const biggest = films.length ? [...films].sort((a,b) => b.crowd - a.crowd)[0] : null;
-    const minutes = archive.reduce((sum, film) => sum + runtimeMinutes(film.runtime), 0);
 
+    const bestCurator = curatorScores.length
+      ? [...curatorScores].sort((a,b) => b.avg - a.avg || b.films - a.films)[0]
+      : null;
+
+    const biggest = films.length
+      ? [...films].sort((a,b) => b.crowd - a.crowd)[0]
+      : null;
+
+    const divisive = rated.length
+      ? [...rated].sort((a,b) => b.spread - a.spread || b.ratingCount - a.ratingCount)[0]
+      : null;
+
+    const minutes = archive.reduce((sum, film) => sum + runtimeMinutes(film.runtime), 0);
+    const completedIds = new Set(archive.map(f => String(f.id)));
+    const completedRatings = ratings.filter(r => completedIds.has(String(r.screening_id)));
+
+    const userGroups = new Map();
+    completedRatings.forEach(r => {
+      const name = String(r.user_name || "").trim();
+      if (!name) return;
+      const group = userGroups.get(name) || [];
+      group.push(Number(r.score));
+      userGroups.set(name, group);
+    });
+
+    const userAverages = [...userGroups.entries()].map(([name, scores]) => ({
+      name,
+      count: scores.length,
+      avg: scores.reduce((a,b) => a + b, 0) / scores.length
+    }));
+
+    const highestAverage = userAverages.length
+      ? Math.max(...userAverages.map(x => x.avg))
+      : null;
+    const lowestAverage = userAverages.length
+      ? Math.min(...userAverages.map(x => x.avg))
+      : null;
+    const mostRatings = userAverages.length
+      ? Math.max(...userAverages.map(x => x.count))
+      : 0;
+
+    const easiest = highestAverage === null
+      ? []
+      : userAverages.filter(x => Math.abs(x.avg - highestAverage) < 0.0001);
+
+    const hardest = lowestAverage === null
+      ? []
+      : userAverages.filter(x => Math.abs(x.avg - lowestAverage) < 0.0001);
+
+    const prolific = mostRatings
+      ? userAverages.filter(x => x.count === mostRatings)
+      : [];
+
+    const overallAverage = completedRatings.length
+      ? completedRatings.reduce((sum, r) => sum + Number(r.score), 0) / completedRatings.length
+      : null;
+
+    const attendeeCounts = new Map();
+    rsvps
+      .filter(r => r.status === "going" && completedIds.has(String(r.screening_id)))
+      .forEach(r => {
+        const name = String(r.user_name || "").trim();
+        if (!name) return;
+        attendeeCounts.set(name, (attendeeCounts.get(name) || 0) + 1);
+      });
+
+    const maxAttendance = attendeeCounts.size
+      ? Math.max(...attendeeCounts.values())
+      : 0;
+    const loyal = maxAttendance
+      ? [...attendeeCounts.entries()].filter(([, count]) => count === maxAttendance).map(([name]) => name)
+      : [];
+
+    const joinNames = rows => rows.map(x => x.name).sort().join(" + ");
     const cards = [
       ["Screenings", archive.length || "—", "completed"],
       ["Watch time", minutes ? formatWatchTime(minutes) : "—", "on the clock"],
+      ["Total ratings", completedRatings.length || "—", completedRatings.length ? "opinions submitted" : "No ratings yet"],
+      ["Community average", overallAverage === null ? "—" : overallAverage.toFixed(2), "average score / 5"],
       ["Best rated", best ? best.avg.toFixed(1) : "—", best ? best.title : "No ratings yet"],
       ["Best curator", bestCurator ? bestCurator.avg.toFixed(1) : "—", bestCurator ? `${bestCurator.name} · ${bestCurator.films} film${bestCurator.films === 1 ? "" : "s"}` : "No curator data"],
-      ["Biggest crowd", biggest ? biggest.crowd : "—", biggest ? biggest.title : "No attendance yet"]
+      ["Biggest crowd", biggest ? biggest.crowd : "—", biggest ? biggest.title : "No attendance yet"],
+      ["Most loyal", loyal.length ? maxAttendance : "—", loyal.length ? `${loyal.sort().join(" + ")} · screenings attended` : "No attendance yet"],
+      ["Easiest to please", easiest.length ? highestAverage.toFixed(2) : "—", easiest.length ? `${joinNames(easiest)} · avg rating` : "No ratings yet"],
+      ["Hardest to please", hardest.length ? lowestAverage.toFixed(2) : "—", hardest.length ? `${joinNames(hardest)} · avg rating` : "No ratings yet"],
+      ["Most prolific rater", prolific.length ? mostRatings : "—", prolific.length ? `${joinNames(prolific)} · ratings submitted` : "No ratings yet"],
+      ["Most divisive film", divisive && divisive.ratingCount > 1 ? divisive.spread.toFixed(1) : "—", divisive && divisive.ratingCount > 1 ? `${divisive.title} · rating spread` : "Need 2+ ratings on a film"]
     ];
 
     $("#recordGrid").innerHTML = cards.map(([label, value, note]) => `
@@ -288,7 +388,7 @@
       const { archive, rsvps, ratings } = await loadData();
       const films = filmStats(archive, ratings, rsvps);
       renderAttendance(archive, rsvps);
-      renderRecords(archive, films);
+      renderRecords(archive, films, ratings, rsvps);
       await renderFilms(films);
     } catch (error) {
       console.error(error);

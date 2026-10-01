@@ -1603,3 +1603,53 @@ body {
   font-family: "Courier New", monospace;
   font-weight: 700;
 }
+
+
+/* Full attendance leaderboard: ties share the same rank. */
+.attendance-podium {
+  display: block !important;
+}
+.attendance-leaderboard {
+  display: grid;
+  gap: 7px;
+}
+.attendance-row {
+  display: grid;
+  grid-template-columns: 54px minmax(150px, 1fr) minmax(120px, 2fr);
+  gap: 10px;
+  align-items: center;
+  padding: 9px;
+  border: 2px outset #d4d0c8;
+  background: #f3f0e8;
+  color: #111;
+}
+.attendance-first {
+  font-weight: 700;
+}
+.attendance-rank {
+  font-family: "Arial Black", Impact, sans-serif;
+  font-size: 20px;
+  text-align: center;
+}
+.attendance-person {
+  min-width: 0;
+}
+.attendance-bar-wrap {
+  height: 18px;
+  border: 2px inset #d4d0c8;
+  background: #fff;
+  padding: 2px;
+}
+.attendance-bar {
+  min-width: 4px;
+  height: 100%;
+  background: currentColor;
+}
+@media (max-width: 620px) {
+  .attendance-row {
+    grid-template-columns: 42px minmax(0,1fr);
+  }
+  .attendance-bar-wrap {
+    grid-column: 2;
+  }
+}

@@ -296,13 +296,9 @@
 
     if (error) throw error;
 
-    // Non Event's first real screening is 1 October 2026.
-    // Older rows were demo seed data from development and must never appear publicly.
-    const launch = new Date("2026-10-01T00:00:00");
-    return (data || []).filter(row => {
-      const when = new Date(row.screened_at || row.screening_at || 0);
-      return when >= launch;
-    });
+    // The database is now the source of truth for completed screenings.
+    // Old development/demo screenings are removed by cleanup-demo-history.sql.
+    return data || [];
   }
 
   async function getRsvps() {
