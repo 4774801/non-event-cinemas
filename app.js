@@ -16,6 +16,12 @@
   let user = localStorage.getItem("ne_user") || "";
   let activeScreeningId = null;
 
+  // Once a real upcoming film has been read from Supabase, keep that as the
+  // authoritative homepage state. Some legacy Chaos scripts still try to
+  // restore the old pre-selection "You decide" card after app.js renders.
+  let authoritativeScreening = null;
+  let screeningGuardBusy = false;
+
   const demo = {
     screenings: [
       {
@@ -276,7 +282,64 @@
       rows.find(row => !isPlaceholderTitle(row.title)) ||
       rows[0];
 
+    if (selected && !isPlaceholderTitle(selected.title)) {
+      authoritativeScreening = selected;
+    }
+
     return [selected];
+  }
+
+  function screeningLooksUndecided() {
+    if (!screeningGrid) return false;
+    const text = String(screeningGrid.textContent || "").toLowerCase();
+    return (
+      text.includes("you decide") ||
+      text.includes("hasn't been chosen") ||
+      text.includes("hasn’t been chosen")
+    );
+  }
+
+  async function restoreAuthoritativeScreening() {
+    if (
+      screeningGuardBusy ||
+      !authoritativeScreening ||
+      !screeningLooksUndecided()
+    ) return;
+
+    screeningGuardBusy = true;
+
+    try {
+      // Re-use the normal renderer so RSVP state, poster fallback and all
+      // existing homepage behavior stay intact.
+      await renderScreenings();
+    } catch (error) {
+      console.error("Could not restore selected screening:", error);
+    } finally {
+      // Let the DOM settle before accepting another legacy mutation.
+      setTimeout(() => {
+        screeningGuardBusy = false;
+      }, 100);
+    }
+  }
+
+  if (screeningGrid) {
+    const screeningGuard = new MutationObserver(() => {
+      if (authoritativeScreening && screeningLooksUndecided()) {
+        queueMicrotask(restoreAuthoritativeScreening);
+      }
+    });
+
+    screeningGuard.observe(screeningGrid, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+
+    // A couple of delayed checks also catch old scripts that run from timers
+    // rather than direct DOM mutation callbacks.
+    setTimeout(restoreAuthoritativeScreening, 250);
+    setTimeout(restoreAuthoritativeScreening, 1000);
+    setTimeout(restoreAuthoritativeScreening, 2500);
   }
 
   async function getArchive() {
