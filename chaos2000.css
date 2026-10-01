@@ -1582,3 +1582,18 @@ body {
     display: inline;
   }
 }
+
+/* Current screening rating — appears automatically one hour after film start */
+.current-film-rating {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 2px dashed currentColor;
+}
+.current-film-rating-title {
+  font: 900 12px "Arial Black", Impact, sans-serif;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.current-film-rating .rating-row {
+  margin-top: 0;
+}

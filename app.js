@@ -336,8 +336,62 @@
     return ["", "tbc", "tbd", "to be decided", "you decide", "undecided"].includes(title);
   }
 
+  function ratingUnlockTime(screening) {
+    const start = new Date(screening?.screening_at || 0);
+    if (Number.isNaN(start.getTime())) return null;
+
+    // Ratings open one hour after the scheduled film start.
+    // A 7:00 PM screening therefore opens at 8:00 PM.
+    return new Date(start.getTime() + 60 * 60 * 1000);
+  }
+
+  function ratingsAreOpen(screening) {
+    const unlock = ratingUnlockTime(screening);
+    return Boolean(unlock && Date.now() >= unlock.getTime());
+  }
+
+  function currentRatingMarkup(screening, ratings) {
+    if (!ratingsAreOpen(screening)) return "";
+
+    const rows = ratings.filter(
+      r => String(r.screening_id) === String(screening.id)
+    );
+
+    const mine = rows.find(
+      r => String(r.user_name || "").trim().toLowerCase() ===
+           String(user || "").trim().toLowerCase()
+    )?.score || 0;
+
+    const average = rows.length
+      ? (rows.reduce((sum, r) => sum + Number(r.score || 0), 0) / rows.length).toFixed(1)
+      : "—";
+
+    return `
+      <div class="current-film-rating">
+        <div class="current-film-rating-title">RATE THE FILM</div>
+        <div class="rating-row" aria-label="Rate ${esc(screening.title)}">
+          ${[1,2,3,4,5].map(n => `
+            <button
+              class="star ${n <= mine ? "active" : ""}"
+              data-rate-current="${esc(screening.id)}"
+              data-score="${n}"
+              aria-label="${n} star${n === 1 ? "" : "s"}"
+              title="${n}/5"
+            >★</button>
+          `).join("")}
+          <span class="rating-average">
+            ${average}/5 · ${rows.length} rating${rows.length === 1 ? "" : "s"}
+          </span>
+        </div>
+      </div>`;
+  }
+
   async function renderScreenings() {
-    const [screenings, rsvps] = await Promise.all([getScreenings(), getRsvps()]);
+    const [screenings, rsvps, ratings] = await Promise.all([
+      getScreenings(),
+      getRsvps(),
+      getRatings()
+    ]);
     if (!screenings.length) {
       screeningGrid.innerHTML = `
         <article class="screening-card screening-card-undecided">
@@ -401,6 +455,7 @@
             <button class="rsvp-btn" data-rsvp="${esc(s.id)}">
               ${mine ? `RSVP: ${mine.status.replace("_"," ")}` : "RSVP"}
             </button>
+            ${currentRatingMarkup(s, ratings)}
           </div>
         </article>`;
     }));
@@ -418,6 +473,38 @@
         rsvpDialog.showModal();
       });
     });
+
+    document.querySelectorAll("[data-rate-current]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const screening = screenings.find(
+          s => String(s.id) === String(btn.dataset.rateCurrent)
+        );
+        if (!screening || !ratingsAreOpen(screening)) return;
+
+        try {
+          await rateScreening(btn.dataset.rateCurrent, btn.dataset.score);
+        } catch (error) {
+          console.error("Could not save current-film rating:", error);
+          showToast("Could not save rating.");
+        }
+      });
+    });
+
+    // Reveal the stars automatically at the unlock time if this page was
+    // already open before then.
+    const nextUnlock = screenings
+      .map(ratingUnlockTime)
+      .filter(Boolean)
+      .filter(date => date.getTime() > Date.now())
+      .sort((a, b) => a - b)[0];
+
+    if (nextUnlock) {
+      const wait = Math.min(
+        nextUnlock.getTime() - Date.now() + 250,
+        2147483000
+      );
+      setTimeout(() => renderScreenings(), wait);
+    }
   }
 
   // Robust RSVP.EXE handler. This is intentionally self-contained so it
@@ -834,7 +921,7 @@
       if (error) throw error;
     }
     showToast(`Rated ${score}/5.`);
-    await renderArchive();
+    await Promise.all([renderScreenings(), renderArchive()]);
   }
 
   async function renderArchive() {
