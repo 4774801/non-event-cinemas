@@ -1,5 +1,4 @@
 (() => {
-  // HALLOWEEN ROUND DEPLOY SYNC
   // Prevent old/duplicate app bundles from both initialising the homepage.
   // Some versions of the live page have loaded both app.js and
   // non-event-app-updated.js. Whichever current bundle runs first owns the app.
@@ -20,8 +19,7 @@
   const loginLabel = $("#loginLabel");
   const loginBtn = $("#loginBtn");
 
-  let user = (localStorage.getItem("ne_user") || "").trim().toUpperCase();
-  if (user) localStorage.setItem("ne_user", user);
+  let user = localStorage.getItem("ne_user") || "";
   let activeScreeningId = null;
 
   const demo = {
@@ -30,7 +28,7 @@
         id: "s1",
         title: "TBC",
         curator: "",
-        screening_at: "2026-10-15T19:00:00",
+        screening_at: "2026-10-01T19:00:00",
         runtime: "",
         year: null,
         note: "",
@@ -156,10 +154,6 @@
     return poster;
   }
 
-  function displayUserName(value="") {
-    return String(value || "").trim().toUpperCase();
-  }
-
   function esc(value="") {
     return String(value)
       .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
@@ -249,7 +243,7 @@
 
   $("#loginForm").addEventListener("submit", (e) => {
     e.preventDefault();
-    const value = $("#nameInput").value.trim().toUpperCase();
+    const value = $("#nameInput").value.trim();
     if (!value) return;
     user = value;
     localStorage.setItem("ne_user", user);
@@ -261,6 +255,9 @@
   async function getScreenings() {
     if (!isShared) return demo.screenings;
 
+    // Fetch all active screening rows rather than blindly taking the oldest.
+    // During development there were placeholder rows left in the table; if one
+    // of those still exists it must not hide the film selected in admin.
     const { data, error } = await sb
       .from("screenings")
       .select("*")
@@ -278,21 +275,14 @@
       return ["", "tbc", "tbd", "to be decided", "you decide", "undecided"].includes(title);
     };
 
-    // The homepage must show the ACTUAL next scheduled screening.
-    // Do not prefer an older selected-title row over a later admin-scheduled row.
-    const now = new Date();
-
-    const futureRows = rows.filter(row => {
-      const when = new Date(row.screening_at || 0);
-      return !Number.isNaN(when.getTime()) && when >= now;
-    });
-
+    // Prefer a row that actually has a selected film. If several do, use the
+    // earliest one. Only fall back to a placeholder row if no selected film
+    // exists at all.
     const selected =
-      futureRows[0] ||
-      rows[0] ||
-      null;
+      rows.find(row => !isPlaceholderTitle(row.title)) ||
+      rows[0];
 
-    return selected ? [selected] : [];
+    return [selected];
   }
 
   async function getArchive() {
@@ -422,11 +412,11 @@
       screeningGrid.innerHTML = `
         <article class="screening-card screening-card-undecided">
           <div class="undecided-date">
-            <span class="date-chip">Thu 15 Oct 2026 · 7:00 PM</span>
+            <span class="date-chip">Thu 1 Oct 2026 · 7:00 PM</span>
           </div>
           <div class="undecided-copy">
             <h3>You decide.</h3>
-            <p>The Halloween film hasn&#39;t been chosen yet.</p>
+            <p>The first film hasn&#39;t been chosen yet.</p>
             <a class="poll-link" href="#recommendations">Vote for the film →</a>
           </div>
         </article>`;
@@ -441,15 +431,15 @@
         return `
           <article class="screening-card screening-card-undecided">
             <div class="undecided-date">
-              <span class="date-chip">Thu 15 Oct 2026 · 7:00 PM</span>
+              <span class="date-chip">Thu 1 Oct 2026 · 7:00 PM</span>
             </div>
             <div class="undecided-copy">
               <h3>You decide.</h3>
-              <p>The Halloween film hasn&#39;t been chosen yet.</p>
+              <p>The first film hasn&#39;t been chosen yet.</p>
               <a class="poll-link" href="#recommendations">Vote for the film →</a>
               <div class="attendee-line undecided-attendees">
                 <strong>${going.length} attending</strong>
-                ${going.length ? ` · ${going.map(x => esc(displayUserName(x.user_name))).join(", ")}` : " · Be the first to commit."}
+                ${going.length ? ` · ${going.map(x => esc(x.user_name)).join(", ")}` : " · Be the first to commit."}
               </div>
               <button class="rsvp-btn" data-rsvp="${esc(s.id)}">
                 ${mine ? `RSVP: ${mine.status.replace("_"," ")}` : "RSVP"}
@@ -476,7 +466,7 @@
             <p>${esc(s.note || "Feature presentation")}</p>
             <div class="attendee-line">
               <strong>${going.length} attending</strong>
-              ${going.length ? ` · ${going.map(x => esc(displayUserName(x.user_name))).join(", ")}` : " · Be the first to commit."}
+              ${going.length ? ` · ${going.map(x => esc(x.user_name)).join(", ")}` : " · Be the first to commit."}
             </div>
             <button class="rsvp-btn" data-rsvp="${esc(s.id)}">
               ${mine ? `RSVP: ${mine.status.replace("_"," ")}` : "RSVP"}
@@ -737,17 +727,17 @@
       return false;
     }
 
+    const activeRows = await getRecommendations();
+    const alreadyHasOne = activeRows.some(r =>
+      normUserName(r.user_name) === normUserName(user)
+    );
+
+    if (alreadyHasOne) {
+      showToast("You already have an active recommendation.");
+      return false;
+    }
+
     if (!isShared) {
-      const activeRows = await getRecommendations();
-      const alreadyHasOne = activeRows.some(r =>
-        normUserName(r.user_name) === normUserName(user)
-      );
-
-      if (alreadyHasOne) {
-        showToast("You already have an active recommendation.");
-        return false;
-      }
-
       const rows = activeRows.filter(r => r.is_active !== false);
       rows.push({
         id: crypto.randomUUID(),
@@ -849,8 +839,6 @@
   }
 
   async function renderRecommendations() {
-    if (!recommendationList || !recCount) return;
-
     const rows = await getRecommendations();
     rows.sort((a,b) => (b.votes || 0) - (a.votes || 0));
     recCount.textContent = `${rows.length} suggestion${rows.length === 1 ? "" : "s"}`;
@@ -885,7 +873,7 @@
         <div>
           <div class="rec-title">${esc(r.title)}</div>
           <div class="rec-reason">${esc(r.reason || "No pitch submitted. Bold strategy.")}</div>
-          <div class="rec-by">NOMINATED BY ${esc(displayUserName(r.user_name || "ANON"))}</div>
+          <div class="rec-by">NOMINATED BY ${esc(r.user_name || "ANON")}</div>
           <div class="rec-voters">VOTED BY ${voterLine}</div>
         </div>
         <button
@@ -909,28 +897,24 @@
     );
   }
 
-  const recommendForm = $("#recommendForm");
-  if (recommendForm) {
-    recommendForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (!requireUser("recommend")) return;
-      const title = $("#recTitle").value.trim();
-      const reason = $("#recReason").value.trim();
-      if (!title) return;
-      try {
-        const poster = await lookupPoster(title);
-        if (await addRecommendation(title, reason, poster)) {
-          e.target.reset();
-          showToast("Recommendation added.");
-          await renderRecommendations();
-        }
-      } catch (err) {
-        console.error("Could not save recommendation:", err);
-        const detail = err?.message || err?.details || err?.hint || "database rejected the save";
-        showToast(`Could not save rec: ${detail}`);
+  $("#recommendForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!requireUser("recommend")) return;
+    const title = $("#recTitle").value.trim();
+    const reason = $("#recReason").value.trim();
+    if (!title) return;
+    try {
+      const poster = await lookupPoster(title);
+      if (await addRecommendation(title, reason, poster)) {
+        e.target.reset();
+        showToast("Recommendation added.");
+        await renderRecommendations();
       }
-    });
-  }
+    } catch (err) {
+      console.error(err);
+      showToast("Could not save recommendation.");
+    }
+  });
 
   async function getRatings() {
     if (!isShared) return read("ratings", demo.ratings);
