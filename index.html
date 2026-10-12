@@ -237,29 +237,6 @@
   <script src="./chaos2000-state.js?v=20261001-midnight1"></script>
   <script src="./halloween2000.js?v=20261012-3"></script>
 
-<script id="halloween-emergency-runtime">
-(() => {
-  const fix = () => {
-    document.querySelectorAll(".date-chip").forEach(el => {
-      el.textContent = el.textContent
-        .replace(/Thu\s+1\s+Oct\s+2026/gi, "Thu 15 Oct 2026")
-        .replace(/1\s+Oct\s+2026/gi, "15 Oct 2026");
-    });
 
-    document.querySelectorAll("img").forEach(img => {
-      const src = String(img.getAttribute("src") || "");
-      if (/AnimatedStar|Jack-o-lantern|Batflying/i.test(src)) {
-        img.src = "https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif";
-      }
-    });
-  };
-
-  fix();
-  const grid = document.querySelector("#screeningGrid");
-  if (grid) new MutationObserver(fix).observe(grid, {childList:true, subtree:true});
-  setTimeout(fix, 300);
-  setTimeout(fix, 1000);
-})();
-</script>
 </body>
 </html>
