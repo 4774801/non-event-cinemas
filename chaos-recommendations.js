@@ -158,6 +158,27 @@
       text-transform: uppercase;
     }
 
+
+    .recommendation-item .commons-title-image {
+      grid-column: 2 !important;
+      grid-row: 1 / span 2 !important;
+      width: 78px !important;
+      height: 100% !important;
+      min-height: 112px;
+      align-self: stretch !important;
+      border: 2px solid #000;
+      background: #111;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .recommendation-item .commons-title-image > img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      display: block;
+    }
+
     .recommendation-item .rec-copy {
       grid-column: 3 !important;
       grid-row: 1 / span 2 !important;
@@ -299,7 +320,7 @@
   document.head.appendChild(interactionStyle);
 
   const STOPWORDS = new Set(["the"]);
-  const imageCacheKey = "ne_chaos_fake_poster_cache_v3";
+  const imageCacheKey = "ne_chaos_fake_poster_cache_v4_full_title";
   const creditsCacheKey = "ne_chaos_movie_credits_cache_v5";
   const gifCacheKey = "ne_chaos_top_gif_cache_v1";
   const referenceImageCacheKey = "ne_chaos_reference_image_cache_v1";
@@ -326,11 +347,11 @@
     const cache = readCache(imageCacheKey);
     if (Object.prototype.hasOwnProperty.call(cache,key)) return cache[key];
 
-    const word = firstWord(title);
+    const phrase = String(title || "").trim();
     let url = "";
     try {
       const params = new URLSearchParams({
-        action:"query", generator:"search", gsrsearch:word, gsrnamespace:"6",
+        action:"query", generator:"search", gsrsearch:phrase, gsrnamespace:"6",
         gsrlimit:"8", prop:"imageinfo", iiprop:"url|mime", iiurlwidth:"360",
         format:"json", origin:"*"
       });
@@ -451,6 +472,23 @@
     cache[key] = url;
     writeCache(gifCacheKey, cache);
     return url;
+  }
+
+  function makeCommonsImageCard(title, imageUrl) {
+    const media = document.createElement("div");
+    media.className = "rec-media commons-title-image";
+
+    if (imageUrl) {
+      const img = document.createElement("img");
+      img.src = imageUrl;
+      img.alt = `${title} Wikimedia Commons search result`;
+      img.referrerPolicy = "no-referrer";
+      media.appendChild(img);
+    } else {
+      media.innerHTML = '<div class="rec-poster-empty">NO COMMONS IMAGE FOUND</div>';
+    }
+
+    return media;
   }
 
   function makeBootlegCover(title, imageUrl) {
@@ -943,7 +981,7 @@
 
     const title=titleEl.textContent.trim();
     const isLeader = card === list.querySelector(".recommendation-item");
-    const signature = `${title}|${isLeader ? "gif" : "bootleg"}`;
+    const signature = `${title}|commons-full-title`;
     if (!title || card.dataset.chaosEnhanced===signature) return;
     card.dataset.chaosEnhanced=signature;
 
@@ -953,16 +991,13 @@
     card.querySelectorAll(":scope > .rec-poster, :scope > .fake-official-poster, :scope > .rec-media").forEach(el=>el.remove());
     copy.querySelectorAll(".rec-meta-row").forEach(el=>el.remove());
 
-    const [imageUrl,credits,gifUrl]=await Promise.all([
-      movieReferenceImage(title),
-      movieCredits(title),
-      isLeader ? topMovieGif(title) : Promise.resolve("")
+    const [imageUrl,credits]=await Promise.all([
+      firstCommonsImage(title),
+      movieCredits(title)
     ]);
     if (card.dataset.chaosEnhanced!==signature || !card.isConnected) return;
 
-    const media = isLeader
-      ? makeGifCard(title, gifUrl, imageUrl)
-      : makeBootlegCover(title, imageUrl);
+    const media = makeCommonsImageCard(title, imageUrl);
 
     rank.insertAdjacentElement("afterend", media);
 
