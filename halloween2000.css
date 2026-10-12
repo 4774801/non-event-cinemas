@@ -1,0 +1,383 @@
+
+/* ==========================================================
+   NON EVENT CINEMAS — HALLOWEEN 2000 HARD RESKIN
+   deliberately hideous haunted Geocities / Windows 98 energy
+   ========================================================== */
+
+:root {
+  --pumpkin: #ff7a00;
+  --acid: #b7ff00;
+  --bruise: #7200a8;
+  --blood: #750000;
+  --grave: #09070b;
+  --bone: #f4e5b8;
+}
+
+html {
+  background: #000 !important;
+}
+
+body {
+  color: var(--bone) !important;
+  background:
+    repeating-linear-gradient(45deg, rgba(255,122,0,.08) 0 8px, rgba(72,0,92,.12) 8px 16px),
+    radial-gradient(circle at 20% 20%, rgba(112,0,150,.45), transparent 34%),
+    radial-gradient(circle at 80% 5%, rgba(255,80,0,.30), transparent 28%),
+    #050006 !important;
+  font-family: "Comic Sans MS", "Trebuchet MS", Verdana, sans-serif !important;
+  cursor: crosshair;
+}
+
+/* Giant cheap haunted-page wallpaper message */
+body::before,
+body::after {
+  position: fixed;
+  z-index: 0;
+  opacity: .11;
+  pointer-events: none;
+  font: 900 92px/1 "Arial Black", Impact, sans-serif;
+  color: var(--pumpkin);
+  writing-mode: vertical-rl;
+  text-shadow: 5px 5px #4b005f;
+}
+body::before { content: "DOOT ☠ DOOT ☠ DOOT"; left: 3px; top: 82px; }
+body::after  { content: "SPOOKY!!! ☠"; right: 3px; top: 130px; transform: rotate(180deg); }
+
+.top-warning {
+  background: #000 !important;
+  color: #ffb000 !important;
+  border: 4px ridge #ff7a00 !important;
+  font: 900 13px "Courier New", monospace !important;
+  text-shadow: 2px 2px #6f00a8;
+}
+
+.page-shell {
+  position: relative;
+  z-index: 1;
+  background: #150016 !important;
+  border: 7px ridge #ff7a00 !important;
+  box-shadow:
+    11px 11px 0 #000,
+    17px 17px 0 #5a006f !important;
+}
+
+.fake-toolbar {
+  background: repeating-linear-gradient(90deg,#3a003f 0 16px,#160019 16px 32px) !important;
+  border-bottom: 4px groove #ff7a00 !important;
+}
+
+.fake-toolbar button,
+.login-btn,
+.choice-btn,
+.primary-btn,
+.rsvp-btn {
+  background: #2a002d !important;
+  color: #ffd36a !important;
+  border-top-color: #ff9d27 !important;
+  border-left-color: #ff9d27 !important;
+  border-right-color: #4b005a !important;
+  border-bottom-color: #4b005a !important;
+}
+
+.fake-address {
+  background: #000 !important;
+  color: #9cff00 !important;
+  border-color: #693172 !important;
+}
+
+.masthead-grid {
+  min-height: 430px !important;
+  border-color: #ff7a00 !important;
+}
+
+.left-chaos,
+.right-chaos {
+  background:
+    repeating-linear-gradient(0deg, #100012 0 18px, #26002c 18px 36px) !important;
+  color: #ffe6a8 !important;
+}
+
+.left-chaos { border-right: 5px ridge #ff7a00 !important; }
+.right-chaos { border-left: 5px ridge #ff7a00 !important; }
+
+.side-title,
+.window-title {
+  color: #fff1b1 !important;
+  background: linear-gradient(90deg,#610071,#9e2500,#ff7a00,#4b005e) !important;
+  border-bottom: 2px solid #000 !important;
+  text-shadow: 2px 2px #000;
+}
+
+.side-nav a,
+.right-chaos a {
+  background: #000 !important;
+  color: #ffbb43 !important;
+  border: 3px outset #743b74 !important;
+}
+.side-nav a:hover,
+.right-chaos a:hover {
+  color: #000 !important;
+  background: var(--acid) !important;
+}
+
+.hero-chaos {
+  min-height: 430px !important;
+  background:
+    radial-gradient(circle at 50% 12%, #6f006f 0, #310035 30%, transparent 52%),
+    linear-gradient(#140015 0%, #35001d 58%, #a83200 100%) !important;
+  border-left: 4px solid #000;
+  border-right: 4px solid #000;
+}
+
+.hero-chaos::before {
+  content: "☠ ☾ ☠ ☾ ☠ ☾ ☠ ☾ ☠" !important;
+  display: grid;
+  place-content: center;
+  color: rgba(255,160,20,.21);
+  font-size: 54px;
+  line-height: 1.8;
+  letter-spacing: 25px;
+  background: none !important;
+  transform: rotate(-7deg) scale(1.2);
+}
+
+.hero-chaos h1 {
+  margin: 16px 0 !important;
+  color: #ff8a00 !important;
+  font-size: clamp(46px, 8vw, 92px) !important;
+  letter-spacing: -3px !important;
+  text-shadow:
+    4px 4px 0 #000,
+    7px 7px 0 #6d0080,
+    -3px -3px 0 #ffd45d !important;
+  transform: rotate(-2deg) !important;
+}
+
+.hero-chaos h1 span:last-child {
+  color: #d4ff42 !important;
+}
+
+.grave-title {
+  color: #ff8a00 !important;
+}
+
+.sparkle-row {
+  color: #d4ff42 !important;
+  font-size: 22px !important;
+}
+
+.hero-graphics {
+  gap: 22px !important;
+}
+
+.hero-graphics .head-logo {
+  filter: sepia(1) saturate(1.8) hue-rotate(325deg) contrast(1.15);
+  transform: rotate(-3deg);
+  border: 5px ridge #ff7a00 !important;
+  background: #e7dcb6 !important;
+}
+
+.hero-skeltal {
+  width: 180px !important;
+  height: 164px !important;
+  object-fit: contain !important;
+  background: #000 !important;
+  border: 6px ridge #a563ff !important;
+  transform: rotate(4deg);
+  box-shadow: 8px 8px 0 #000;
+}
+
+.hero-subcopy {
+  display: inline-block;
+  padding: 7px 12px;
+  background: #000;
+  color: #caff42 !important;
+  border: 3px dashed #ff8a00;
+  font: 900 13px "Courier New", monospace !important;
+  animation: spookyFlash .9s steps(2,end) infinite;
+}
+
+.blink-panel {
+  background: #000 !important;
+  color: #ff8a00 !important;
+  border: 4px ridge #a563ff !important;
+  transform: rotate(1deg);
+}
+
+@keyframes spookyFlash {
+  0%,49% { color:#caff42; border-color:#ff8a00; }
+  50%,100% { color:#ff8a00; border-color:#caff42; }
+}
+
+.rainbow-divider {
+  height: 13px !important;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #ff7a00 0 18px,
+      #000 18px 36px,
+      #75008d 36px 54px,
+      #c9ff35 54px 72px
+    ) !important;
+  border-top: 2px solid #000;
+  border-bottom: 2px solid #000;
+}
+
+main {
+  background:
+    linear-gradient(rgba(0,0,0,.70),rgba(0,0,0,.70)),
+    repeating-linear-gradient(135deg,#27002b 0 10px,#050006 10px 20px) !important;
+  padding-top: 12px;
+}
+
+.chaos-window {
+  border: 5px ridge #ff7a00 !important;
+  box-shadow: 7px 7px 0 #000 !important;
+}
+
+.window-body {
+  background: #f0dfb6 !important;
+  color: #150015 !important;
+}
+
+.section-heading h2 {
+  color: #760000 !important;
+  font-family: "Arial Black", Impact, sans-serif !important;
+  text-shadow: 2px 2px #ffb14a;
+}
+
+.screening-card,
+.archive-card,
+.seasonal-card {
+  background: #fff2c7 !important;
+  border: 4px ridge #6f007f !important;
+  box-shadow: 5px 5px 0 #3c0012 !important;
+}
+
+.screening-card .poster,
+.archive-poster {
+  border: 4px ridge #ff7a00 !important;
+  background: #000 !important;
+}
+
+/* explicitly kill the fake bootleg poster decoration language */
+.bootleg-sticker,
+.bootleg-sticker-2,
+.bootleg-corner,
+.bootleg-title,
+.bootleg-subtitle,
+.bootleg-badge,
+.fake-vhs-label,
+.fake-dvd-label,
+.poster-sticker,
+.poster-title-overlay {
+  display: none !important;
+}
+
+.halloween-special-window .window-title {
+  background: linear-gradient(90deg,#7f0000,#ff6a00,#6b007d) !important;
+}
+
+.seasonal-blurb {
+  font-size: 15px !important;
+  background: #050006 !important;
+  color: #f7db97 !important;
+  border: 4px dashed #ff7a00 !important;
+}
+
+.skeltal-strip {
+  padding: 14px;
+  background:
+    repeating-linear-gradient(90deg,#000 0 24px,#25002a 24px 48px);
+  border: 5px ridge #a563ff;
+}
+
+.skeltal-strip img {
+  width: 135px !important;
+  background: #000 !important;
+  border: 4px ridge #ff7a00 !important;
+}
+
+.seasonal-card-grid {
+  grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+}
+
+.seasonal-card {
+  transform: rotate(-1deg);
+}
+.seasonal-card:nth-child(2) { transform: rotate(1.2deg); }
+.seasonal-card:nth-child(3) { transform: rotate(-.5deg); }
+
+.seasonal-card-title {
+  color: #750000 !important;
+  font-size: 16px !important;
+  text-shadow: 1px 1px #ffb347;
+}
+
+.best-viewed {
+  background: #000 !important;
+  color: #caff42 !important;
+  border: 4px ridge #ff7a00 !important;
+  transform: rotate(2deg);
+}
+
+.spooky-gif-box,
+.side-gif-stack {
+  background: #000;
+  border: 4px ridge #5e006f;
+  padding: 8px;
+}
+
+.spooky-gif-box img,
+.side-gif-stack img,
+.halloween-footer-strip img {
+  width: 115px !important;
+  background: #000 !important;
+  border: 4px ridge #ff7a00 !important;
+}
+
+footer {
+  background: #050006 !important;
+  color: #ffcb66 !important;
+  border-top: 6px ridge #ff7a00 !important;
+}
+
+footer a { color: #caff42 !important; }
+
+/* JS-injected obnoxious decorations */
+.haunted-corner {
+  position: fixed;
+  z-index: 50;
+  width: 112px;
+  max-width: 19vw;
+  background: #000;
+  border: 4px ridge #ff7a00;
+  padding: 4px;
+  pointer-events: none;
+}
+.haunted-corner.left { left: 5px; bottom: 7px; transform: rotate(-5deg); }
+.haunted-corner.right { right: 5px; bottom: 7px; transform: rotate(5deg) scaleX(-1); }
+
+.doot-floater {
+  position: fixed;
+  z-index: 45;
+  color: #d4ff42;
+  background: #000;
+  border: 2px dashed #ff7a00;
+  padding: 3px 6px;
+  font: 900 11px "Courier New", monospace;
+  pointer-events: none;
+  animation: driftDoot 8s linear infinite;
+}
+@keyframes driftDoot {
+  from { transform: translateY(110vh) rotate(-8deg); }
+  to   { transform: translateY(-20vh) rotate(8deg); }
+}
+
+@media (max-width: 820px) {
+  body::before, body::after { display:none; }
+  .masthead-grid { min-height: 0 !important; }
+  .seasonal-card-grid { grid-template-columns: 1fr !important; }
+  .haunted-corner { width: 72px; opacity: .72; }
+  .hero-skeltal { width: 125px !important; height: 115px !important; }
+}
