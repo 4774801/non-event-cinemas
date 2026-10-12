@@ -381,3 +381,35 @@ footer a { color: #caff42 !important; }
   .haunted-corner { width: 72px; opacity: .72; }
   .hero-skeltal { width: 125px !important; height: 115px !important; }
 }
+
+
+/* Halloween suggestion round restored */
+.halloween-recommendations .rec-banner {
+  background: #050006 !important;
+  color: #ffb347 !important;
+  border: 4px ridge #ff7a00 !important;
+}
+.halloween-recommendations .skull-glyph {
+  font-size: 26px;
+  color: #caff42;
+}
+.halloween-recommendations .recommend-layout {
+  background: #160018;
+}
+.halloween-recommendations .rec-form-window,
+.halloween-recommendations .pile-window {
+  border-color: #ff7a00 !important;
+}
+.halloween-recommendations .gif-row img {
+  width: 72px;
+  height: 65px;
+  object-fit: contain;
+  background: #000;
+  border: 3px ridge #ff7a00;
+  padding: 3px;
+}
+.footer-skulls {
+  color: #caff42;
+  font-size: 28px;
+  letter-spacing: 10px;
+}
