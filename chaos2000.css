@@ -1653,3 +1653,185 @@ body {
     grid-column: 2;
   }
 }
+
+/* HALLOWEEN 2026 SAFE OVERLAY */
+:root {
+  --h-pumpkin:#ff7a00;
+  --h-acid:#caff42;
+  --h-purple:#690075;
+  --h-dark:#09000c;
+  --h-bone:#f5e4b6;
+}
+
+html { background:#050006; }
+
+body {
+  color:#111;
+  background:
+    radial-gradient(circle at 18px 18px, rgba(255,122,0,.20) 0 3px, transparent 4px),
+    radial-gradient(circle at 54px 54px, rgba(155,0,180,.20) 0 3px, transparent 4px),
+    #130017;
+  background-size:72px 72px;
+}
+
+.top-warning {
+  color:#ffb347;
+  background:#000;
+  border-bottom-color:var(--h-pumpkin);
+  text-shadow:2px 2px #57006b;
+}
+
+.page-shell {
+  background:#160017;
+  border-color:var(--h-pumpkin);
+  box-shadow:8px 8px 0 #000;
+}
+
+.fake-toolbar {
+  background:repeating-linear-gradient(90deg,#250029 0 18px,#100012 18px 36px);
+  border-bottom-color:var(--h-pumpkin);
+}
+.fake-address { background:#000; color:var(--h-acid); }
+
+.left-chaos,
+.right-chaos {
+  background:repeating-linear-gradient(0deg,#120014 0 20px,#26002c 20px 40px);
+  color:var(--h-bone);
+}
+.left-chaos { border-right-color:var(--h-pumpkin); }
+.right-chaos { border-left-color:var(--h-pumpkin); }
+
+.side-title,
+.window-title {
+  color:#fff4c7;
+  background:linear-gradient(90deg,#590068,#9a2600,#ff7a00,#590068);
+  text-shadow:1px 1px #000;
+}
+
+.side-nav a,
+.right-chaos a {
+  color:#ffb347;
+  background:#050006;
+  border-color:#743b74;
+}
+.side-nav a:hover,
+.right-chaos a:hover {
+  color:#000;
+  background:var(--h-acid);
+}
+
+.hero-chaos {
+  background:
+    radial-gradient(circle at 50% 12%, #670072 0, #2d0032 33%, transparent 58%),
+    linear-gradient(#110013 0%,#360020 60%,#9a3600 100%);
+}
+
+.hero-chaos::before {
+  opacity:.16;
+  background-image:none;
+  content:"☠  ☾  ☠  ☾  ☠";
+  color:#ff9a19;
+  font:900 48px/1.7 "Arial Black",Impact,sans-serif;
+  display:grid;
+  place-items:center;
+  letter-spacing:18px;
+}
+
+.hero-chaos h1 {
+  color:var(--h-pumpkin);
+  text-shadow:3px 3px #000,6px 6px #650077;
+}
+.hero-chaos h1 span { color:var(--h-acid); }
+
+.sparkle-row {
+  color:var(--h-acid);
+  text-shadow:2px 2px #000;
+}
+.sparkle-row img,
+.tiny-gif {
+  background:#000;
+  border:2px ridge var(--h-pumpkin);
+  object-fit:contain;
+}
+
+.blink-panel {
+  color:#ffbd55;
+  background:#000;
+  border-color:var(--h-acid);
+}
+
+.right-box.pink { background:#4a164d; color:var(--h-bone); }
+.best-viewed {
+  color:var(--h-acid);
+  background:#000;
+  border-color:var(--h-pumpkin);
+}
+
+.rainbow-divider {
+  background:repeating-linear-gradient(
+    90deg,
+    #ff7a00 0 18px,
+    #000 18px 36px,
+    #690075 36px 54px,
+    #caff42 54px 72px
+  );
+}
+
+.rec-zone {
+  background:
+    linear-gradient(45deg,rgba(255,122,0,.14),transparent 30%),
+    #39003f;
+}
+.rec-banner {
+  color:#ffb347;
+  border-color:var(--h-pumpkin);
+}
+.rec-banner img,
+.gif-row img,
+.gif-strip img,
+.weird-sidebar-gif-box img {
+  background:#000 !important;
+  border:3px ridge var(--h-pumpkin) !important;
+  object-fit:contain !important;
+}
+
+.chaos-window { border-color:var(--h-pumpkin); }
+.window-body { background:#f1dfb6; }
+.section-heading h2,
+.mini-heading h3 { color:#710000; }
+.date-chip { background:#4d0057; border-color:#a75cb2; }
+.poll-link { background:#7b003d; border-color:#ff9347; }
+.primary-btn { background:var(--h-acid); }
+.vote-status { background:#ffce6a; border-color:#710000; }
+
+.recommendation-item {
+  background:#fff0c9;
+  border-color:#6d0078;
+}
+.recommendation-item:nth-child(odd) { background:#ead8b3; }
+.rec-rank { background:#51005d; border-color:#ab62b5; }
+.rec-title { color:#790000; }
+
+footer {
+  color:#ffbd55;
+  background:#050006;
+  border-top-color:var(--h-pumpkin);
+}
+footer a { color:var(--h-acid); }
+
+/* Remove the fake bootleg stickers/titles laid over recommendation artwork. */
+.bootleg-top,
+.bootleg-title,
+.bootleg-sticker,
+.bootleg-side,
+.gif-badge,
+.poster-sticker,
+.poster-title-overlay,
+.fake-vhs-label,
+.fake-dvd-label {
+  display:none !important;
+}
+
+/* Keep controls completely normal and clickable. */
+a, button { cursor:pointer; }
+input, textarea { cursor:text; }
