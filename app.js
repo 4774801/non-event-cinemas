@@ -28,7 +28,7 @@
         id: "s1",
         title: "TBC",
         curator: "",
-        screening_at: "2026-10-01T19:00:00",
+        screening_at: "2026-10-15T19:00:00",
         runtime: "",
         year: null,
         note: "",
@@ -275,14 +275,27 @@
       return ["", "tbc", "tbd", "to be decided", "you decide", "undecided"].includes(title);
     };
 
-    // Prefer a row that actually has a selected film. If several do, use the
-    // earliest one. Only fall back to a placeholder row if no selected film
-    // exists at all.
-    const selected =
+    // Show the actual next future screening. Old unfinished development rows
+    // (including the obsolete 1 Oct row) must never take over the homepage.
+    const now = new Date();
+    const futureRows = rows.filter(row => {
+      const when = new Date(row.screening_at || 0);
+      return !Number.isNaN(when.getTime()) && when >= now;
+    });
+
+    let selected =
+      futureRows.find(row => !isPlaceholderTitle(row.title)) ||
+      futureRows[0] ||
       rows.find(row => !isPlaceholderTitle(row.title)) ||
       rows[0];
 
-    return [selected];
+    // Current Halloween round is Thu 15 Oct. If Supabase still contains the
+    // obsolete 1 Oct active row, preserve its ID/RSVPs but use the correct date.
+    if (selected && String(selected.screening_at || "").startsWith("2026-10-01")) {
+      selected = { ...selected, screening_at: "2026-10-15T19:00:00" };
+    }
+
+    return selected ? [selected] : [];
   }
 
   async function getArchive() {
@@ -412,11 +425,11 @@
       screeningGrid.innerHTML = `
         <article class="screening-card screening-card-undecided">
           <div class="undecided-date">
-            <span class="date-chip">Thu 1 Oct 2026 · 7:00 PM</span>
+            <span class="date-chip">Thu 15 Oct 2026 · 7:00 PM</span>
           </div>
           <div class="undecided-copy">
             <h3>You decide.</h3>
-            <p>The first film hasn&#39;t been chosen yet.</p>
+            <p>The Halloween film hasn&#39;t been chosen yet.</p>
             <a class="poll-link" href="#recommendations">Vote for the film →</a>
           </div>
         </article>`;
@@ -431,11 +444,11 @@
         return `
           <article class="screening-card screening-card-undecided">
             <div class="undecided-date">
-              <span class="date-chip">Thu 1 Oct 2026 · 7:00 PM</span>
+              <span class="date-chip">Thu 15 Oct 2026 · 7:00 PM</span>
             </div>
             <div class="undecided-copy">
               <h3>You decide.</h3>
-              <p>The first film hasn&#39;t been chosen yet.</p>
+              <p>The Halloween film hasn&#39;t been chosen yet.</p>
               <a class="poll-link" href="#recommendations">Vote for the film →</a>
               <div class="attendee-line undecided-attendees">
                 <strong>${going.length} attending</strong>
