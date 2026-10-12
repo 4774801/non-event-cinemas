@@ -737,17 +737,17 @@
       return false;
     }
 
-    const activeRows = await getRecommendations();
-    const alreadyHasOne = activeRows.some(r =>
-      normUserName(r.user_name) === normUserName(user)
-    );
-
-    if (alreadyHasOne) {
-      showToast("You already have an active recommendation.");
-      return false;
-    }
-
     if (!isShared) {
+      const activeRows = await getRecommendations();
+      const alreadyHasOne = activeRows.some(r =>
+        normUserName(r.user_name) === normUserName(user)
+      );
+
+      if (alreadyHasOne) {
+        showToast("You already have an active recommendation.");
+        return false;
+      }
+
       const rows = activeRows.filter(r => r.is_active !== false);
       rows.push({
         id: crypto.randomUUID(),
@@ -925,8 +925,9 @@
           await renderRecommendations();
         }
       } catch (err) {
-        console.error(err);
-        showToast("Could not save recommendation.");
+        console.error("Could not save recommendation:", err);
+        const detail = err?.message || err?.details || err?.hint || "database rejected the save";
+        showToast(`Could not save rec: ${detail}`);
       }
     });
   }
