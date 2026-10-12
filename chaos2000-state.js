@@ -1,5 +1,4 @@
 (() => {
-  // HALLOWEEN ROUND DEPLOY SYNC
   /*
     NON EVENT CINEMAS — Chaos skin helper
 
@@ -22,7 +21,7 @@
     if (!grid) return;
 
     // Never replace the card. app.js owns its content.
-    const card = grid.querySelector(".screening-card");
+    const card = grid.querySelector(".screening-card:not(.screening-card-undecided)");
     if (!card) return;
 
     const info = card.querySelector(".screening-info");
