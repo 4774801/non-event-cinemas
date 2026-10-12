@@ -25,7 +25,7 @@ body {
     radial-gradient(circle at 80% 5%, rgba(255,80,0,.30), transparent 28%),
     #050006 !important;
   font-family: "Comic Sans MS", "Trebuchet MS", Verdana, sans-serif !important;
-  cursor: crosshair;
+  cursor: auto;
 }
 
 /* Giant cheap haunted-page wallpaper message */
@@ -415,3 +415,7 @@ footer a { color: #caff42 !important; }
 }
 
 /* DEPLOY SYNC 2026-10-12 HALLOWEEN ROUND */
+
+/* restore normal interactive cursors */
+a, button, input, textarea, select, label { cursor: pointer; }
+input[type="text"], textarea { cursor: text; }
