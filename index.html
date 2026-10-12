@@ -4,15 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NON EVENT CINEMAS!!! [SPOOKY HALLOWEEN EDITION]</title>
-  <link rel="stylesheet" href="./chaos2000.css?v=20261012-halloween1">
-  <link rel="stylesheet" href="./halloween2000.css?v=20261012-2">
+  <link rel="stylesheet" href="./chaos2000.css?v=20261012-halloween3">
+  <link rel="stylesheet" href="./halloween2000.css?v=20261012-3">
 </head>
 
 <body>
   <div class="top-warning">
     <marquee scrollamount="6">
       ★★★ NON EVENT CINEMAS SPOOKY HALLOWEEN SPECIAL ★★★
-      NEXT SCREENING: THU 15 OCT 2026 ★★★ DOORS 6:30 PM ★ FILM 7:00 PM ★★★ HOST PICK SPECIAL — NO VOTING THIS ROUND ★★★ DOOT DOOT ★★★
+      NEXT SCREENING: THU 15 OCT 2026 ★★★ DOORS 6:30 PM ★ FILM 7:00 PM ★★★ HALLOWEEN SUGGESTIONS ONLY ★★★ DOOT DOOT ★★★
     </marquee>
   </div>
 
@@ -31,7 +31,7 @@
           <div class="side-title">SPOOKY MENU!!!</div>
           <nav class="side-nav">
             <a href="#screenings">► NEXT SCREENING</a>
-            <a href="#special">► HALLOWEEN SPECIAL</a>
+            <a href="#recommendations">► SPOOKY SUGGESTIONS</a>
             <a href="#archive">► PAST FILMS</a>
             <a href="./stats.html">► STATS PAGE</a>
             <a href="./admin.html">► SECRET ADMIN</a>
@@ -46,9 +46,9 @@
 
         <section class="hero-chaos halloween-hero">
           <div class="sparkle-row" aria-hidden="true">
-            <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/AnimatedStar.gif" alt="">
+            <span>☠</span>
             <span>WELCOME 2 THE</span>
-            <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/AnimatedStar.gif" alt="">
+            <span>☠</span>
           </div>
 
           <h1><span class="grave-title">NON EVENT</span><br><span>HALLOWEEN.exe</span></h1>
@@ -62,7 +62,7 @@
             <span class="blink">*** SPOOKY SPECIAL — THU 15 OCT ***</span>
           </div>
 
-          <div class="hero-subcopy">☠ HOST PICK NIGHT ☠ THU 15 OCT ☠ DOOT DOOT ☠</div>
+          <div class="hero-subcopy">☠ HALLOWEEN FILMS ONLY ☠ THU 15 OCT ☠ DOOT DOOT ☠</div>
 
           <button id="loginBtn" class="login-btn" type="button">
             <span class="status-dot"></span>
@@ -73,7 +73,7 @@
         <aside class="right-chaos halloween-right">
           <div class="right-box pink">
             <div class="side-title">HOT LINKS</div>
-            <a href="#special">HALLOWEEN INFO</a>
+            <a href="#recommendations">SUGGEST SPOOKY MOVIE</a>
             <a href="#screenings">WHO'S COMING?</a>
             <a href="./stats.html">LEADERBOARD</a>
           </div>
@@ -82,7 +82,6 @@
 
           <div class="side-gif-stack">
             <img src="https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif" alt="Skeleton trumpet gif">
-            <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Jack-o-lantern_animated.gif" alt="Animated pumpkin">
           </div>
         </aside>
       </div>
@@ -104,40 +103,57 @@
         </div>
       </section>
 
-      <section id="special" class="section chaos-window halloween-special-window">
-        <div class="window-title orange">
-          <span>HALLOWEEN_SPECIAL.GIF</span>
-          <span class="window-controls">_ □ ×</span>
+      <section id="recommendations" class="section rec-zone halloween-recommendations">
+        <div class="rec-banner">
+          <span class="skull-glyph">☠</span>
+          <marquee direction="left" scrollamount="4">★★★ HALLOWEEN ROUND!!! SUGGEST SOMETHING SPOOKY!!! HORROR / THRILLER / WEIRD SHIT ENCOURAGED ★★★</marquee>
+          <span class="skull-glyph">☠</span>
         </div>
-        <div class="window-body">
-          <div class="section-heading">
-            <h2>HALLOWEEN SPECIAL</h2>
+
+        <div class="recommend-layout">
+          <div class="chaos-window rec-form-window">
+            <div class="window-title hotpink">
+              <span>ADD_SPOOKY_MOVIE.WIZ</span>
+              <span class="window-controls">? ×</span>
+            </div>
+            <div class="window-body">
+              <h2>RECOMMEND A HALLOWEEN FILM</h2>
+              <p id="voteStatus" class="vote-status">Loading voting deadline...</p>
+
+              <form id="recommendForm" class="recommend-form">
+                <label>
+                  FILM TITLE:
+                  <input id="recTitle" type="text" maxlength="100" required placeholder="e.g. SCREAM">
+                </label>
+
+                <label>
+                  WHY IS IT SPOOKY ENOUGH???
+                  <textarea id="recReason" maxlength="300" placeholder="Optional Halloween propaganda"></textarea>
+                </label>
+
+                <button class="primary-btn" type="submit">SUBMIT TO THE HAUNTED INTERNET!!!</button>
+              </form>
+
+              <div class="gif-row">
+                <img src="https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif" alt="Mr Skeltal">
+                <span>1 spooky recommendation per person</span>
+                <img src="https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif" alt="Mr Skeltal">
+              </div>
+            </div>
           </div>
 
-          <p class="seasonal-blurb">
-            This round is a host-picked Halloween screening, so the normal suggestions and voting chaos are switched off.
-            The site will go back to democracy next time. For now: spooky vibes only.
-          </p>
-
-          <div class="skeltal-strip" aria-hidden="true">
-            <img src="https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif" alt="">
-            <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Jack-o-lantern_animated.gif" alt="">
-            <img src="https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif" alt="">
-          </div>
-
-          <div class="seasonal-card-grid">
-            <article class="seasonal-card">
-              <div class="seasonal-card-title">NO SUGGESTIONS THIS TIME</div>
-              <p>Halloween is a themed special, so the programme is already locked in.</p>
-            </article>
-            <article class="seasonal-card">
-              <div class="seasonal-card-title">THEME NIGHT</div>
-              <p>Expect spooky nonsense, terrible web graphics, and at least one skeleton playing a trumpet.</p>
-            </article>
-            <article class="seasonal-card">
-              <div class="seasonal-card-title">IMPORTANT ANNOUNCEMENT</div>
-              <p>DOOT DOOT.</p>
-            </article>
+          <div class="chaos-window pile-window">
+            <div class="window-title electric">
+              <span>THE_SPOOKY_PILE.HTML</span>
+              <span class="window-controls">_ □ ×</span>
+            </div>
+            <div class="window-body">
+              <div class="mini-heading">
+                <h3>THE SPOOKY PILE</h3>
+                <span id="recCount">0 suggestions</span>
+              </div>
+              <div id="recommendationList" class="recommendation-list"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -159,8 +175,8 @@
     <footer>
       <div class="gif-strip halloween-footer-strip" aria-hidden="true">
         <img src="https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif" alt="">
-        <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Batflying.gif" alt="">
-        <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Jack-o-lantern_animated.gif" alt="">
+        <span class="footer-skulls">☠ ☠ ☠</span>
+        <img src="https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif" alt="">
       </div>
       <p>
         NON EVENT CINEMAS © 2001–2026 · HALLOWEEN WEBMASTER EDITION ·
@@ -195,8 +211,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script src="./app.js?v=20261012-halloween1"></script>
+  <script src="./app.js?v=20261012-halloween3"></script>
   <script src="./chaos2000-state.js?v=20261001-midnight1"></script>
-  <script src="./halloween2000.js?v=20261012-2"></script>
+  <script src="./halloween2000.js?v=20261012-3"></script>
 </body>
 </html>
