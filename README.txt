@@ -1,31 +1,23 @@
-REAL FIRST FILM / STATS FIX
+HALLOWEEN RESKIN
 
-1. Run cleanup-demo-history.sql ONCE in Supabase > SQL Editor.
-   It preserves the screening whose title contains "El Dorado" and deletes all
-   OTHER rows currently marked as past. The old schema seeded three fake past
-   films, which is why Stats showed 4 films.
+Replace these files in GitHub:
+- index.html
+- app.js
+- chaos2000.css
+- stats.html
 
-2. Replace these files in GitHub:
-   - app.js
-   - index.html
-   - stats.js
-   - stats.html
-   - chaos2000.css
+Optional but recommended:
+- Run clear-halloween-suggestions.sql once in Supabase > SQL Editor
+  if you want the current suggestion pile fully cleared for the host-picked
+  Halloween screening.
 
-You do not need to replace admin files for this fix.
-
-CHANGES
-- Road to El Dorado will be the only Past Film.
-- Main page no longer has the old launch-date archive filter.
-- Attendance leaderboard shows EVERY attendee, not just three.
-- Equal attendance counts share the same rank.
-- Adds:
-  * Total ratings
-  * Community average
-  * Most loyal attendee(s)
-  * Easiest to please (highest personal average)
-  * Hardest to please (lowest personal average)
-  * Most prolific rater
-  * Most divisive film
-  * Existing screenings/watch time/best film/best curator/biggest crowd remain.
-- Stats page no longer says there are no completed screenings.
+What this changes:
+- Same bad early-2000s vibe, but spooky Halloween themed.
+- Adds skeleton trumpet gifs / pumpkin / bat nonsense.
+- Removes the suggestions section from the homepage for this round.
+- Removes the chaos-recommendations script from the homepage, so no more
+  cheap sticker/fake-title recommendation poster treatment there.
+- Top marquee now says 15 Oct 2026.
+- app.js now safely handles the seasonal page with no suggestion form/list.
+- Homepage selection still uses the actual next future screening row, so the
+  15 Oct screening should show instead of 1 Oct/today.
