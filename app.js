@@ -29,7 +29,7 @@
         id: "s1",
         title: "TBC",
         curator: "",
-        screening_at: "2026-10-01T19:00:00",
+        screening_at: "2026-10-15T19:00:00",
         runtime: "",
         year: null,
         note: "",
@@ -421,11 +421,11 @@
       screeningGrid.innerHTML = `
         <article class="screening-card screening-card-undecided">
           <div class="undecided-date">
-            <span class="date-chip">Thu 1 Oct 2026 · 7:00 PM</span>
+            <span class="date-chip">Thu 15 Oct 2026 · 7:00 PM</span>
           </div>
           <div class="undecided-copy">
             <h3>You decide.</h3>
-            <p>The first film hasn&#39;t been chosen yet.</p>
+            <p>The Halloween film hasn&#39;t been chosen yet.</p>
             <a class="poll-link" href="#recommendations">Vote for the film →</a>
           </div>
         </article>`;
@@ -440,11 +440,11 @@
         return `
           <article class="screening-card screening-card-undecided">
             <div class="undecided-date">
-              <span class="date-chip">Thu 1 Oct 2026 · 7:00 PM</span>
+              <span class="date-chip">Thu 15 Oct 2026 · 7:00 PM</span>
             </div>
             <div class="undecided-copy">
               <h3>You decide.</h3>
-              <p>The first film hasn&#39;t been chosen yet.</p>
+              <p>The Halloween film hasn&#39;t been chosen yet.</p>
               <a class="poll-link" href="#recommendations">Vote for the film →</a>
               <div class="attendee-line undecided-attendees">
                 <strong>${going.length} attending</strong>
