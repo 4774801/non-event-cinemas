@@ -1,4 +1,5 @@
 (() => {
+  // HALLOWEEN ROUND DEPLOY SYNC
   // Prevent old/duplicate app bundles from both initialising the homepage.
   // Some versions of the live page have loaded both app.js and
   // non-event-app-updated.js. Whichever current bundle runs first owns the app.
