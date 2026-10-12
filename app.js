@@ -911,8 +911,9 @@
         await renderRecommendations();
       }
     } catch (err) {
-      console.error(err);
-      showToast("Could not save recommendation.");
+      console.error("Could not save recommendation:", err);
+      const detail = err?.message || err?.details || err?.hint || err?.code || "database rejected the save";
+      showToast(`Could not save rec: ${detail}`);
     }
   });
 
