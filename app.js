@@ -28,7 +28,7 @@
         id: "s1",
         title: "TBC",
         curator: "",
-        screening_at: "2026-10-15T19:00:00",
+        screening_at: "2026-10-29T19:00:00",
         runtime: "",
         year: null,
         note: "",
@@ -190,10 +190,27 @@
     return { open: new Date() < cutoff, next, cutoff };
   }
 
+  function updateMarqueeDate(screening) {
+    const el = document.querySelector("#nextScreeningMarqueeDate");
+    if (!el) return;
+    if (!screening?.screening_at) {
+      el.textContent = "NO DATE SET";
+      return;
+    }
+    const d = new Date(screening.screening_at);
+    el.textContent = new Intl.DateTimeFormat("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    }).format(d).toUpperCase();
+  }
+
   async function renderVoteStatus() {
     const el = $("#voteStatus");
     if (!el) return;
     const state = await votingIsOpen();
+    updateMarqueeDate(state.next);
     if (!state.next) {
       el.textContent = "No upcoming screening scheduled.";
       el.classList.add("closed");
@@ -255,9 +272,6 @@
   async function getScreenings() {
     if (!isShared) return demo.screenings;
 
-    // Fetch all active screening rows rather than blindly taking the oldest.
-    // During development there were placeholder rows left in the table; if one
-    // of those still exists it must not hide the film selected in admin.
     const { data, error } = await sb
       .from("screenings")
       .select("*")
@@ -270,32 +284,8 @@
     const rows = data || [];
     if (!rows.length) return [];
 
-    const isPlaceholderTitle = (value) => {
-      const title = String(value || "").trim().toLowerCase();
-      return ["", "tbc", "tbd", "to be decided", "you decide", "undecided"].includes(title);
-    };
-
-    // Show the actual next future screening. Old unfinished development rows
-    // (including the obsolete 1 Oct row) must never take over the homepage.
-    const now = new Date();
-    const futureRows = rows.filter(row => {
-      const when = new Date(row.screening_at || 0);
-      return !Number.isNaN(when.getTime()) && when >= now;
-    });
-
-    let selected =
-      futureRows.find(row => !isPlaceholderTitle(row.title)) ||
-      futureRows[0] ||
-      rows.find(row => !isPlaceholderTitle(row.title)) ||
-      rows[0];
-
-    // Current Halloween round is Thu 15 Oct. If Supabase still contains the
-    // obsolete 1 Oct active row, preserve its ID/RSVPs but use the correct date.
-    if (selected && String(selected.screening_at || "").startsWith("2026-10-01")) {
-      selected = { ...selected, screening_at: "2026-10-15T19:00:00" };
-    }
-
-    return selected ? [selected] : [];
+    // Admin is the source of truth. The earliest active screening is the next showing.
+    return [rows[0]];
   }
 
   async function getArchive() {
@@ -425,11 +415,11 @@
       screeningGrid.innerHTML = `
         <article class="screening-card screening-card-undecided">
           <div class="undecided-date">
-            <span class="date-chip">Thu 15 Oct 2026 · 7:00 PM</span>
+            <span class="date-chip">No screening scheduled</span>
           </div>
           <div class="undecided-copy">
             <h3>You decide.</h3>
-            <p>The Halloween film hasn&#39;t been chosen yet.</p>
+            <p>Set the next screening date in the admin page.</p>
             <a class="poll-link" href="#recommendations">Vote for the film →</a>
           </div>
         </article>`;
@@ -444,11 +434,11 @@
         return `
           <article class="screening-card screening-card-undecided">
             <div class="undecided-date">
-              <span class="date-chip">Thu 15 Oct 2026 · 7:00 PM</span>
+              <span class="date-chip">${esc(prettyDate(s.screening_at))}</span>
             </div>
             <div class="undecided-copy">
               <h3>You decide.</h3>
-              <p>The Halloween film hasn&#39;t been chosen yet.</p>
+              <p>The film hasn&#39;t been chosen yet.</p>
               <a class="poll-link" href="#recommendations">Vote for the film →</a>
               <div class="attendee-line undecided-attendees">
                 <strong>${going.length} attending</strong>
