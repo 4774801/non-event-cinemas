@@ -161,6 +161,22 @@
       .replaceAll('"',"&quot;").replaceAll("'","&#039;");
   }
 
+  function normaliseMovieTitleCase(value="") {
+    const raw = String(value || "").trim().replace(/\s+/g, " ");
+    if (!raw) return "";
+
+    // Only auto-title-case entries that are entirely lower-case or entirely upper-case.
+    // Preserve deliberately mixed-case titles exactly as typed.
+    if (raw !== raw.toLowerCase() && raw !== raw.toUpperCase()) return raw;
+
+    const small = new Set(["a","an","and","as","at","but","by","for","from","in","nor","of","on","or","the","to","vs","via","with"]);
+    return raw.split(" ").map((word, i, words) => {
+      const lower = word.toLowerCase();
+      if (i > 0 && i < words.length - 1 && small.has(lower)) return lower;
+      return lower.replace(/(^|[-'’])([a-z])/g, (_, p1, p2) => p1 + p2.toUpperCase());
+    }).join(" ");
+  }
+
   function prettyDate(dateStr) {
     const d = new Date(dateStr);
     return new Intl.DateTimeFormat("en-GB", {
@@ -938,7 +954,7 @@
   $("#recommendForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!requireUser("recommend")) return;
-    const title = $("#recTitle").value.trim();
+    const title = normaliseMovieTitleCase($("#recTitle").value);
     const reason = $("#recReason").value.trim();
     if (!title) return;
     try {
