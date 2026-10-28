@@ -768,6 +768,7 @@
 
     return rows.map(row => ({
       ...row,
+      title: normaliseMovieTitleCase(row.title),
       _voters: byRecommendation.get(String(row.id)) || []
     }));
   }
