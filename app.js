@@ -19,7 +19,8 @@
   const loginLabel = $("#loginLabel");
   const loginBtn = $("#loginBtn");
 
-  let user = localStorage.getItem("ne_user") || "";
+  let user = (localStorage.getItem("ne_user") || "").trim().toUpperCase();
+  if (user) localStorage.setItem("ne_user", user);
   let activeScreeningId = null;
 
   const demo = {
@@ -260,7 +261,7 @@
 
   $("#loginForm").addEventListener("submit", (e) => {
     e.preventDefault();
-    const value = $("#nameInput").value.trim();
+    const value = $("#nameInput").value.trim().toUpperCase();
     if (!value) return;
     user = value;
     localStorage.setItem("ne_user", user);
@@ -455,7 +456,7 @@
                   <p>Voting is closed. This was the highest-rated recommendation.</p>
                   <div class="attendee-line">
                     <strong>${going.length} attending</strong>
-                    ${going.length ? ` · ${going.map(x => esc(x.user_name)).join(", ")}` : " · Be the first to commit."}
+                    ${going.length ? ` · ${going.map(x => esc(String(x.user_name || "").trim().toUpperCase())).join(", ")}` : " · Be the first to commit."}
                   </div>
                   <button class="rsvp-btn" data-rsvp="${esc(s.id)}">
                     ${mine ? `RSVP: ${mine.status.replace("_"," ")}` : "RSVP"}
@@ -476,7 +477,7 @@
               <a class="poll-link" href="#recommendations">Vote for the film →</a>
               <div class="attendee-line undecided-attendees">
                 <strong>${going.length} attending</strong>
-                ${going.length ? ` · ${going.map(x => esc(x.user_name)).join(", ")}` : " · Be the first to commit."}
+                ${going.length ? ` · ${going.map(x => esc(String(x.user_name || "").trim().toUpperCase())).join(", ")}` : " · Be the first to commit."}
               </div>
               <button class="rsvp-btn" data-rsvp="${esc(s.id)}">
                 ${mine ? `RSVP: ${mine.status.replace("_"," ")}` : "RSVP"}
@@ -503,7 +504,7 @@
             <p>${esc(s.note || "Feature presentation")}</p>
             <div class="attendee-line">
               <strong>${going.length} attending</strong>
-              ${going.length ? ` · ${going.map(x => esc(x.user_name)).join(", ")}` : " · Be the first to commit."}
+              ${going.length ? ` · ${going.map(x => esc(String(x.user_name || "").trim().toUpperCase())).join(", ")}` : " · Be the first to commit."}
             </div>
             <button class="rsvp-btn" data-rsvp="${esc(s.id)}">
               ${mine ? `RSVP: ${mine.status.replace("_"," ")}` : "RSVP"}
