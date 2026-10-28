@@ -169,7 +169,7 @@
 
   function voteCutoffFor(screeningAt) {
     const d = new Date(screeningAt);
-    return new Date(d.getTime() - 48 * 60 * 60 * 1000);
+    return new Date(d.getTime() - 2 * 60 * 60 * 1000);
   }
 
   function formatCutoff(date) {
@@ -430,6 +430,40 @@
       if (isUndecidedScreening(s)) {
         const going = rsvps.filter(r => String(r.screening_id) === String(s.id) && r.status === "going");
         const mine = rsvps.find(r => String(r.screening_id) === String(s.id) && r.user_name === user);
+
+        const cutoff = voteCutoffFor(s.screening_at);
+        const votingClosed = new Date() >= cutoff;
+
+        if (votingClosed) {
+          const recs = await getRecommendations();
+          recs.sort((a,b) => (Number(b.votes || 0) - Number(a.votes || 0)) || String(a.created_at || "").localeCompare(String(b.created_at || "")));
+          const winner = recs[0] || null;
+
+          if (winner) {
+            return `
+              <article class="screening-card">
+                <div class="poster">
+                  ${winner.poster_url
+                    ? `<img src="${esc(winner.poster_url)}" alt="${esc(winner.title)} poster" onerror="this.remove()">`
+                    : `<div class="poster-fallback"><small>TOP VOTED FILM</small><strong>${esc(winner.title)}</strong></div>`
+                  }
+                </div>
+                <div class="screening-info">
+                  <span class="date-chip">${esc(prettyDate(s.screening_at))}</span>
+                  <h3>${esc(winner.title)}</h3>
+                  <div class="meta">TOP VOTED FILM · ${Number(winner.votes || 0)} vote${Number(winner.votes || 0) === 1 ? "" : "s"}</div>
+                  <p>Voting is closed. This was the highest-rated recommendation.</p>
+                  <div class="attendee-line">
+                    <strong>${going.length} attending</strong>
+                    ${going.length ? ` · ${going.map(x => esc(x.user_name)).join(", ")}` : " · Be the first to commit."}
+                  </div>
+                  <button class="rsvp-btn" data-rsvp="${esc(s.id)}">
+                    ${mine ? `RSVP: ${mine.status.replace("_"," ")}` : "RSVP"}
+                  </button>
+                </div>
+              </article>`;
+          }
+        }
 
         return `
           <article class="screening-card screening-card-undecided">
