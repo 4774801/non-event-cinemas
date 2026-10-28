@@ -208,19 +208,31 @@
   }
 
   function updateMarqueeDate(screening) {
-    const el = document.querySelector("#nextScreeningMarqueeDate");
-    if (!el) return;
+    const marqueeEl = document.querySelector("#nextScreeningMarqueeDate");
+    const heroEl = document.querySelector("#heroScreeningDate");
+
     if (!screening?.screening_at) {
-      el.textContent = "NO DATE SET";
+      if (marqueeEl) marqueeEl.textContent = "NO DATE SET";
+      if (heroEl) heroEl.textContent = "NO DATE SET";
       return;
     }
+
     const d = new Date(screening.screening_at);
-    el.textContent = new Intl.DateTimeFormat("en-GB", {
+    const full = new Intl.DateTimeFormat("en-GB", {
       weekday: "short",
       day: "numeric",
       month: "short",
       year: "numeric"
     }).format(d).toUpperCase();
+
+    const short = new Intl.DateTimeFormat("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short"
+    }).format(d).toUpperCase();
+
+    if (marqueeEl) marqueeEl.textContent = full;
+    if (heroEl) heroEl.textContent = short;
   }
 
   async function renderVoteStatus() {
@@ -461,13 +473,13 @@
               <article class="screening-card">
                 <div class="poster">
                   ${winner.poster_url
-                    ? `<img src="${esc(winner.poster_url)}" alt="${esc(winner.title)} poster" onerror="this.remove()">`
-                    : `<div class="poster-fallback"><small>TOP VOTED FILM</small><strong>${esc(winner.title)}</strong></div>`
+                    ? `<img src="${esc(winner.poster_url)}" alt="${esc(normaliseMovieTitleCase(winner.title))} poster" onerror="this.remove()">`
+                    : `<div class="poster-fallback"><small>TOP VOTED FILM</small><strong>${esc(normaliseMovieTitleCase(winner.title))}</strong></div>`
                   }
                 </div>
                 <div class="screening-info">
                   <span class="date-chip">${esc(prettyDate(s.screening_at))}</span>
-                  <h3>${esc(winner.title)}</h3>
+                  <h3>${esc(normaliseMovieTitleCase(winner.title))}</h3>
                   <div class="meta">TOP VOTED FILM · ${Number(winner.votes || 0)} vote${Number(winner.votes || 0) === 1 ? "" : "s"}</div>
                   <p>Voting is closed. This was the highest-rated recommendation.</p>
                   <div class="attendee-line">
@@ -926,7 +938,7 @@
       <article class="recommendation-item" data-rec-id="${esc(r.id)}">
         <div class="rec-rank">${String(i+1).padStart(2,"0")}</div>
         <div>
-          <div class="rec-title">${esc(r.title)}</div>
+          <div class="rec-title">${esc(normaliseMovieTitleCase(r.title))}</div>
           <div class="rec-reason">${esc(r.reason || "No pitch submitted. Bold strategy.")}</div>
           <div class="rec-by">NOMINATED BY ${esc(r.user_name || "ANON")}</div>
           <div class="rec-voters">VOTED BY ${voterLine}</div>
