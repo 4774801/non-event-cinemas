@@ -22,6 +22,7 @@
   let user = (localStorage.getItem("ne_user") || "").trim().toUpperCase();
   if (user) localStorage.setItem("ne_user", user);
   let activeScreeningId = null;
+  let ratingUnlockTimer = null;
 
   const demo = {
     screenings: [
@@ -399,7 +400,22 @@
   }
 
   function currentRatingMarkup(screening, ratings) {
-    if (!ratingsAreOpen(screening)) return "";
+    const unlock = ratingUnlockTime(screening);
+    if (!ratingsAreOpen(screening)) {
+      if (
+        unlock &&
+        londonDateKey(new Date()) === londonDateKey(screening.screening_at) &&
+        Date.now() < unlock.getTime()
+      ) {
+        const unlockLabel = new Intl.DateTimeFormat("en-GB", {
+          hour: "numeric",
+          minute: "2-digit",
+          timeZone: "Europe/London"
+        }).format(unlock);
+        return `<div class="current-film-rating"><div class="current-film-rating-title">RATINGS OPEN ${esc(unlockLabel)}</div></div>`;
+      }
+      return "";
+    }
 
     const rows = ratings.filter(
       r => String(r.screening_id) === String(screening.id)
@@ -580,12 +596,20 @@
       .filter(date => date.getTime() > Date.now())
       .sort((a, b) => a - b)[0];
 
+    if (ratingUnlockTimer) {
+      clearTimeout(ratingUnlockTimer);
+      ratingUnlockTimer = null;
+    }
+
     if (nextUnlock) {
       const wait = Math.min(
         nextUnlock.getTime() - Date.now() + 250,
         2147483000
       );
-      setTimeout(() => renderScreenings(), wait);
+      ratingUnlockTimer = setTimeout(() => {
+        ratingUnlockTimer = null;
+        renderScreenings();
+      }, wait);
     }
   }
 
