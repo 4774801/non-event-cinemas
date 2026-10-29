@@ -329,9 +329,11 @@
 
     if (error) throw error;
 
-    // The database is now the source of truth for completed screenings.
-    // Old development/demo screenings are removed by cleanup-demo-history.sql.
-    return data || [];
+    // Never show placeholder/dev screenings in Past Films.
+    return (data || []).filter(row => {
+      const title = String(row.title || "").trim().toLowerCase();
+      return !["", "tbc", "tbd", "to be decided", "you decide", "undecided"].includes(title);
+    });
   }
 
   async function getRsvps() {
