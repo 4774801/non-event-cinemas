@@ -56,13 +56,33 @@
       { id:"r1", title:"Heat", reason:"", user_name:"MG", votes:2, poster_url:"", is_active:true, voters:["MG","KJ"] },
       { id:"r2", title:"The Raid", reason:"", user_name:"BT", votes:1, poster_url:"", is_active:true, voters:["BT"] }
     ]).sort((a,b)=>(b.votes||0)-(a.votes||0));
+
     const { data, error } = await sb.from("recommendations")
       .select("*")
       .eq("is_active", true)
-      .order("votes",{ascending:false})
       .order("created_at");
     if (error) throw error;
-    return data;
+
+    const rows = data || [];
+    if (!rows.length) return [];
+
+    const ids = rows.map(r => r.id);
+    const { data: voteRows, error: voteError } = await sb
+      .from("recommendation_votes")
+      .select("recommendation_id,user_name")
+      .in("recommendation_id", ids);
+
+    if (voteError) throw voteError;
+
+    const counts = new Map();
+    for (const vote of (voteRows || [])) {
+      const key = String(vote.recommendation_id);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+
+    return rows
+      .map(row => ({ ...row, votes: counts.get(String(row.id)) || 0 }))
+      .sort((a,b) => (b.votes || 0) - (a.votes || 0) || new Date(a.created_at) - new Date(b.created_at));
   }
 
   async function saveScreening(row) {
@@ -106,6 +126,27 @@
     }
     const { error } = await sb.from("screenings").update({is_past:true}).eq("id", id);
     if (error) throw error;
+  }
+
+  async function finalizeVotingNow() {
+    const rows = await getScreenings();
+    const next = rows
+      .filter(x => !x.is_past && !x.is_cancelled)
+      .sort((a,b)=>new Date(a.screening_at)-new Date(b.screening_at))[0];
+
+    if (!next) throw new Error("No active screening found.");
+
+    const recs = await getRecommendations();
+    if (!recs.length) throw new Error("No active recommendations found.");
+
+    const winner = recs[0];
+    next.title = winner.title;
+    next.poster_url = winner.poster_url || null;
+
+    await saveScreening(next);
+
+    // Important: do NOT clear or reset votes here. This only locks in what won.
+    return winner;
   }
 
   async function finalizeNightNow(id) {
@@ -313,18 +354,36 @@
     await render();
   });
 
+  $("#finalizeVotingBtn").addEventListener("click", async () => {
+    const button = $("#finalizeVotingBtn");
+    button.disabled = true;
+    button.textContent = "SETTING WINNER...";
+
+    try {
+      const winner = await finalizeVotingNow();
+      await render();
+      alert(`Voting finalised. Now Showing is set to "${winner.title}" with ${winner.votes || 0} vote${Number(winner.votes || 0) === 1 ? "" : "s"}.`);
+    } catch (error) {
+      console.error(error);
+      alert(`Could not finalise voting: ${error.message || "database error"}`);
+    } finally {
+      button.disabled = false;
+      button.textContent = "FINALISE VOTING / SET WINNER";
+    }
+  });
+
   $("#finalizeNightBtn").addEventListener("click", async () => {
     const id = $("#screeningId").value;
     if (!id) return;
 
     const title = $("#filmTitle").value.trim() || "this screening";
     if (!confirm(
-      `Finalise ${title} now?\n\nThis will close ratings, move it to Past Films, update stats/attendance, create the next fortnightly screening and open the next voting round.`
+      `END AND ARCHIVE ${title}?\n\nWARNING: this is NOT for finalising voting. This ends the screening, archives it, resets the voting round and creates the next screening.`
     )) return;
 
     const button = $("#finalizeNightBtn");
     button.disabled = true;
-    button.textContent = "FINALISING...";
+    button.textContent = "ARCHIVING...";
 
     try {
       await finalizeNightNow(id);
@@ -335,7 +394,7 @@
       alert(`Could not finalise night: ${error.message || "database error"}`);
     } finally {
       button.disabled = false;
-      button.textContent = "FINALISE NIGHT NOW";
+      button.textContent = "END NIGHT / ARCHIVE SCREENING";
     }
   });
 
