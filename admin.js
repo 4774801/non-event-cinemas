@@ -35,8 +35,7 @@
   }
   function cutoffFor(dateString) {
     const d = new Date(dateString);
-    d.setDate(d.getDate() - 2);
-    return d;
+    return new Date(d.getTime() - 2 * 60 * 60 * 1000);
   }
   function fmt(d) {
     return new Intl.DateTimeFormat("en-GB", {
@@ -209,9 +208,8 @@
     next.poster_url = rec.poster_url || "";
     await saveScreening(next);
 
-    // Lock this round's result, remove the winner, and carry the rest forward.
-    await closeRoundAndCarryForward(rec.id);
-
+    // Selecting the film must never destroy the voting record.
+    // Votes are only reset when the screening is actually archived.
     await render();
   }
 
@@ -376,9 +374,18 @@
     const id = $("#screeningId").value;
     if (!id) return;
 
+    const rows = await getScreenings();
+    const current = rows.find(x => String(x.id) === String(id));
+    const screeningAt = current?.screening_at ? new Date(current.screening_at) : null;
+
+    if (screeningAt && Date.now() < screeningAt.getTime()) {
+      alert("Cannot archive this screening yet. Use FINALISE VOTING / SET WINNER if you are trying to lock in the winning film.");
+      return;
+    }
+
     const title = $("#filmTitle").value.trim() || "this screening";
     if (!confirm(
-      `END AND ARCHIVE ${title}?\n\nWARNING: this is NOT for finalising voting. This ends the screening, archives it, resets the voting round and creates the next screening.`
+      `END AND ARCHIVE ${title}?\n\nThis is only for AFTER the screening. It archives the film, resets the voting round and creates the next screening.\n\nIf you only want to lock in the winning vote, press Cancel and use FINALISE VOTING / SET WINNER.`
     )) return;
 
     const button = $("#finalizeNightBtn");
@@ -394,7 +401,7 @@
       alert(`Could not finalise night: ${error.message || "database error"}`);
     } finally {
       button.disabled = false;
-      button.textContent = "END NIGHT / ARCHIVE SCREENING";
+      button.textContent = "⚠ END NIGHT / ARCHIVE AFTER SCREENING";
     }
   });
 
