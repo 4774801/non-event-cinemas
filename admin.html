@@ -256,13 +256,15 @@
             <div class="admin-actions">
               <button class="primary-btn" type="submit">WRITE SCREENING</button>
               <button id="cancelBtn" class="admin-secondary" type="button">CANCEL SCREENING</button>
+              <button id="finalizeVotingBtn" class="primary-btn" type="button">FINALISE VOTING / SET WINNER</button>
               <button id="markPastBtn" class="admin-secondary" type="button">MARK WATCHED</button>
-              <button id="finalizeNightBtn" class="primary-btn" type="button">FINALISE NIGHT NOW</button>
+              <button id="finalizeNightBtn" class="admin-secondary" type="button">END NIGHT / ARCHIVE SCREENING</button>
             </div>
             <div id="cancelStatus" class="admin-note"></div>
           </form>
           <p class="admin-note">&gt; Voting lock executes automatically 48 hours before screening.</p>
-          <p class="admin-note">&gt; FINALISE NIGHT NOW performs the midnight rollover immediately: closes ratings, archives the film, updates stats/attendance, creates the next fortnightly screening and opens the next voting round.</p>
+          <p class="admin-note">&gt; FINALISE VOTING / SET WINNER locks in the current top-voted recommendation as the Now Showing film. It does NOT archive the screening or clear votes.</p>
+          <p class="admin-note">&gt; END NIGHT / ARCHIVE SCREENING is destructive: it closes ratings, archives the film, creates the next fortnightly screening and starts the next voting round.</p>
         </section>
 
         <section class="admin-card">
