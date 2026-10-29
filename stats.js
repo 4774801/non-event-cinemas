@@ -131,7 +131,12 @@
     if (rsvpRes.error) throw rsvpRes.error;
     if (ratingRes.error) throw ratingRes.error;
 
-    return { archive: archiveRes.data, rsvps: rsvpRes.data, ratings: ratingRes.data };
+    const archive = (archiveRes.data || []).filter(row => {
+      const title = String(row.title || "").trim().toLowerCase();
+      return !["", "tbc", "tbd", "to be decided", "you decide", "undecided"].includes(title);
+    });
+
+    return { archive, rsvps: rsvpRes.data || [], ratings: ratingRes.data || [] };
   }
 
   function runtimeMinutes(runtime) {
