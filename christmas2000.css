@@ -1,0 +1,263 @@
+/* NON EVENT CINEMAS — CHRISTMAS 2000 SAFE SKIN
+   Presentation only: no overlays blocking controls, no JS, no pointer-event traps. */
+
+:root {
+  --xmas-red:#a40014;
+  --xmas-green:#075b32;
+  --xmas-green2:#0d7a43;
+  --xmas-gold:#ffd45c;
+  --xmas-cream:#fff7dc;
+  --xmas-snow:#f7fbff;
+  --xmas-night:#071426;
+}
+
+html {
+  background:#061326 !important;
+}
+
+body {
+  color:#111;
+  background:
+    radial-gradient(circle at 18px 18px, rgba(255,255,255,.95) 0 2px, transparent 3px),
+    radial-gradient(circle at 52px 45px, rgba(255,255,255,.55) 0 1.5px, transparent 2.5px),
+    linear-gradient(#081a30,#0a2d3d 55%,#0b3c30) !important;
+  background-size:72px 72px,92px 92px,auto !important;
+}
+
+.top-warning {
+  color:var(--xmas-gold) !important;
+  background:#7f0011 !important;
+  border-bottom:4px ridge #fff !important;
+  text-shadow:1px 1px #003b20;
+}
+
+.page-shell {
+  background:#e9eee8 !important;
+  border-color:#fff !important;
+  box-shadow:8px 8px 0 #071426 !important;
+}
+
+.fake-toolbar {
+  background:repeating-linear-gradient(90deg,#b60018 0 24px,#f8f5e8 24px 48px,#08703c 48px 72px,#f8f5e8 72px 96px) !important;
+  border-bottom-color:#fff !important;
+}
+
+.fake-address {
+  color:#075b32 !important;
+  background:#fffdf3 !important;
+}
+
+.left-chaos,
+.right-chaos,
+.stats-side-menu {
+  color:#fff !important;
+  background:
+    linear-gradient(rgba(0,0,0,.12),rgba(0,0,0,.12)),
+    repeating-linear-gradient(135deg,#075b32 0 18px,#0b7040 18px 36px) !important;
+  border-color:#fff !important;
+}
+
+.side-title,
+.window-title {
+  color:#fff !important;
+  background:linear-gradient(90deg,#8f0013,#c9001e,#08703c) !important;
+  text-shadow:1px 1px #000;
+}
+
+.side-nav a,
+.right-chaos a {
+  color:#fff !important;
+  background:#9b0015 !important;
+  border-color:#ffefb0 #5b000c #5b000c #ffefb0 !important;
+}
+
+.side-nav a:hover,
+.right-chaos a:hover,
+.stats-side-menu .current-link {
+  color:#7d0010 !important;
+  background:var(--xmas-gold) !important;
+}
+
+.hero-chaos {
+  background:
+    radial-gradient(circle at 50% 0,#d51b2f 0,#8a0013 35%,transparent 62%),
+    linear-gradient(#071426 0%,#0b412c 62%,#07301f 100%) !important;
+}
+
+.hero-chaos::before {
+  content:"❄  ✦  ❄  ★  ❄  ✦  ❄" !important;
+  display:grid !important;
+  place-items:center !important;
+  color:rgba(255,255,255,.34) !important;
+  background:none !important;
+  font:900 42px/1.7 Georgia,serif !important;
+  letter-spacing:14px !important;
+  opacity:1 !important;
+  pointer-events:none !important;
+}
+
+.hero-chaos h1 {
+  color:#fff !important;
+  text-shadow:3px 3px 0 #b70018,6px 6px 0 #075b32 !important;
+}
+
+.hero-chaos h1 span {
+  color:var(--xmas-gold) !important;
+}
+
+.sparkle-row {
+  color:#fff !important;
+  text-shadow:2px 2px #075b32 !important;
+}
+
+.blink-panel {
+  color:#fff !important;
+  background:#075b32 !important;
+  border-color:var(--xmas-gold) !important;
+}
+
+.rainbow-divider {
+  background:repeating-linear-gradient(
+    90deg,
+    #b70018 0 18px,
+    #fff 18px 36px,
+    #08703c 36px 54px,
+    #fff 54px 72px,
+    #ffd45c 72px 90px
+  ) !important;
+}
+
+.rec-zone {
+  background:
+    radial-gradient(circle at 20px 20px,rgba(255,255,255,.25) 0 2px,transparent 3px),
+    #075b32 !important;
+  background-size:48px 48px !important;
+}
+
+.rec-banner {
+  color:var(--xmas-gold) !important;
+  background:#8f0013 !important;
+  border-color:#fff !important;
+}
+
+.chaos-window {
+  border-color:#fff !important;
+}
+
+.window-body {
+  background:var(--xmas-cream) !important;
+}
+
+.date-chip {
+  color:#fff !important;
+  background:#075b32 !important;
+  border-color:#a9e0c1 #003a20 #003a20 #a9e0c1 !important;
+}
+
+.primary-btn {
+  color:#fff !important;
+  background:#a40014 !important;
+  border-color:#ffc9cf #5a000b #5a000b #ffc9cf !important;
+}
+
+.poll-link {
+  color:#fff !important;
+  background:#a40014 !important;
+  border-color:#ffd45c !important;
+}
+
+.vote-status {
+  background:#fff1b4 !important;
+  border-color:#a40014 !important;
+}
+
+.recommendation-item {
+  background:#fffdf2 !important;
+  border-color:#0a6138 !important;
+}
+
+.recommendation-item:nth-child(odd) {
+  background:#edf8ef !important;
+}
+
+.rec-rank {
+  color:#fff !important;
+  background:#a40014 !important;
+  border-color:#ffb9c1 !important;
+}
+
+.vote-btn.voted {
+  color:#fff !important;
+  background:#08703c !important;
+}
+
+.stats-title-panel {
+  background:
+    radial-gradient(circle at 85% 25%,rgba(255,255,255,.8) 0 2px,transparent 3px),
+    linear-gradient(135deg,#fffdf0,#dff2e4 45%,#ffd9de) !important;
+  background-size:36px 36px,auto !important;
+}
+
+.stats-title-panel::after {
+  content:"XMAS" !important;
+  color:rgba(164,0,20,.08) !important;
+}
+
+.stats-title-panel h1 {
+  color:#075b32 !important;
+  text-shadow:2px 2px 0 #fff !important;
+}
+
+.stats-title-panel h1 span {
+  color:#a40014 !important;
+}
+
+.teal-title,
+.window-title.purple,
+.window-title.electric,
+.window-title.hotpink {
+  background:linear-gradient(90deg,#075b32,#a40014) !important;
+}
+
+footer {
+  color:var(--xmas-gold) !important;
+  background:#071426 !important;
+  border-top-color:#fff !important;
+}
+
+footer a { color:#fff !important; }
+
+/* Hide the old Halloween novelty GIFs instead of showing skeletons at Christmas. */
+.tiny-gif,
+.sparkle-row img,
+.weird-sidebar-gif-box img,
+.gif-row img,
+.gif-strip img {
+  display:none !important;
+}
+
+.weird-sidebar-gif-box::after {
+  content:"🎄  ❄  🎁";
+  display:block;
+  margin-top:8px;
+  color:#fff;
+  font-size:25px;
+  letter-spacing:5px;
+}
+
+.gif-row::before,
+.gif-row::after {
+  content:"🎅";
+  font-size:24px;
+}
+
+.gif-strip::before {
+  content:"❄  🎄  ✦  🎁  ❄";
+  color:#fff;
+  font-size:24px;
+  letter-spacing:8px;
+}
+
+/* Controls remain normal and clickable. */
+a, button { cursor:pointer; }
+input, textarea { cursor:text; }
