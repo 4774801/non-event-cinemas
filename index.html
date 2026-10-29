@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NON EVENT CINEMAS!!! [HALLOWEEN SPECIAL]</title>
+  <title>NON EVENT CINEMAS!!! [CHRISTMAS SPECIAL]</title>
   <link rel="stylesheet" href="./chaos2000.css?v=20261001-realstats2">
+  <link rel="stylesheet" href="./christmas2000.css?v=20261029-xmas1">
 
   <style>
     /* Chaos suggestion cards: tiny vote + fake Commons poster + real film credits */
@@ -95,8 +96,8 @@
 <body>
   <div class="top-warning">
     <marquee scrollamount="6">
-      ★★★ NON EVENT CINEMAS HALLOWEEN SPECIAL ★★★
-      NEXT SCREENING: <span id="nextScreeningMarqueeDate">LOADING...</span> ★★★ DOORS 6:30 PM ★ FILM 7:00 PM ★★★ SPOOKY SUGGESTIONS OPEN ★★★ DOOT DOOT ★★★
+      ★★★ NON EVENT CINEMAS CHRISTMAS SPECIAL ★★★
+      NEXT SCREENING: <span id="nextScreeningMarqueeDate">LOADING...</span> ★★★ DOORS 6:30 PM ★ FILM 7:00 PM ★★★ FESTIVE SUGGESTIONS OPEN ★★★ MERRY INTERNET ★★★
     </marquee>
   </div>
 
@@ -106,16 +107,16 @@
         <button type="button">◀ BACK</button>
         <button type="button">FORWARD ▶</button>
         <button type="button">⟳ REFRESH</button>
-        <div class="fake-address">http://www.noneventcinemas.com/~spooky/halloween.html</div>
+        <div class="fake-address">http://www.noneventcinemas.com/~xmas/christmas.html</div>
         <img class="tiny-gif" src="https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif" alt="">
       </div>
 
       <div class="masthead-grid">
         <aside class="left-chaos">
-          <div class="side-title">SPOOKY MENU!!!</div>
+          <div class="side-title">XMAS MENU!!!</div>
           <nav class="side-nav">
             <a href="#screenings">► NOW SHOWING</a>
-            <a href="#recommendations">► SPOOKY SUGGESTIONS</a>
+            <a href="#recommendations">► FESTIVE SUGGESTIONS</a>
             <a href="#archive">► PAST FILMS</a>
             <a href="./stats.html">► STATS PAGE</a>
             <a href="./admin.html">► SECRET ADMIN</a>
@@ -132,11 +133,11 @@
         <section class="hero-chaos">
           <div class="sparkle-row" aria-hidden="true">
             <img src="https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif" alt="">
-            <span>WELCOME 2 THE</span>
+            <span>WELCOME 2 THE NORTH POLE WEB</span>
             <img src="https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif" alt="">
           </div>
 
-          <h1>NON EVENT<br><span>HALLOWEEN.exe</span></h1>
+          <h1>NON EVENT<br><span>CHRISTMAS.exe</span></h1>
 
           <div class="hero-graphics">
             <img class="bubble" src="./movies-are-cool-bubble.png" alt="Movies are cool!">
@@ -144,7 +145,7 @@
           </div>
 
           <div class="blink-panel">
-            <span class="blink">*** SPOOKY SPECIAL — <span id="heroScreeningDate">LOADING...</span> ***</span>
+            <span class="blink">*** CHRISTMAS SPECIAL — <span id="heroScreeningDate">LOADING...</span> ***</span>
           </div>
 
           <button id="loginBtn" class="login-btn" type="button">
@@ -156,7 +157,7 @@
         <aside class="right-chaos">
           <div class="right-box pink">
             <div class="side-title">HOT LINKS</div>
-            <a href="#recommendations">VOTE 4 A SPOOKY MOVIE!!!</a>
+            <a href="#recommendations">VOTE 4 A FESTIVE MOVIE!!!</a>
             <a href="#screenings">WHO'S COMING?</a>
             <a href="./stats.html">LEADERBOARD</a>
           </div>
@@ -191,7 +192,7 @@
       <section id="recommendations" class="section rec-zone">
         <div class="rec-banner">
           <img src="https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif" alt="">
-          <marquee direction="left" scrollamount="4">★★★ HALLOWEEN ROUND!!! SUGGEST SOMETHING SPOOKY!!! ★★★</marquee>
+          <marquee direction="left" scrollamount="4">★★★ CHRISTMAS ROUND!!! SUGGEST SOMETHING FESTIVE!!! ★★★</marquee>
           <img src="https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif" alt="">
         </div>
 
@@ -202,7 +203,7 @@
               <span class="window-controls">? ×</span>
             </div>
             <div class="window-body">
-              <h2>RECOMMEND A HALLOWEEN FILM</h2>
+              <h2>RECOMMEND A CHRISTMAS FILM</h2>
               <p id="voteStatus" class="vote-status">Voting closes Tue 13 Oct 2026 · 7:00 PM</p>
 
               <form id="recommendForm" class="recommend-form">
@@ -212,11 +213,11 @@
                 </label>
 
                 <label>
-                  WHY SHOULD WE WATCH IT THIS HALLOWEEN???
-                  <textarea id="recReason" maxlength="300" placeholder="Optional spooky propaganda"></textarea>
+                  WHY SHOULD WE WATCH IT THIS CHRISTMAS???
+                  <textarea id="recReason" maxlength="300" placeholder="Optional festive propaganda"></textarea>
                 </label>
 
-                <button class="primary-btn" type="submit">SUBMIT TO THE HAUNTED INTERNET!!!</button>
+                <button class="primary-btn" type="submit">SUBMIT TO SANTA'S INTERNET!!!</button>
               </form>
 
               <div class="gif-row">
@@ -234,7 +235,7 @@
             </div>
             <div class="window-body">
               <div class="mini-heading">
-                <h3>THE SPOOKY PILE</h3>
+                <h3>THE FESTIVE PILE</h3>
                 <span id="recCount">0 suggestions</span>
               </div>
               <div id="recommendationList" class="recommendation-list"></div>
@@ -264,7 +265,7 @@
         <img src="https://i.kym-cdn.com/photos/images/newsfeed/002/728/839/2ef.gif" alt="">
       </div>
       <p>
-        NON EVENT CINEMAS © 2001–2026 · HALLOWEEN WEBMASTER EDITION ·
+        NON EVENT CINEMAS © 2001–2026 · CHRISTMAS WEBMASTER EDITION ·
         <a href="./admin.html">ADMIN</a>
       </p>
     </footer>
@@ -296,7 +297,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script src="./app.js?v=20261029-rating8pm1"></script>
+  <script src="./app.js?v=20261029-xmas1"></script>
   <script src="./chaos-recommendations.js?v=20261028-commons-fixed2"></script>
   <script src="./chaos2000-state.js?v=20261001-midnight1"></script>
 </body>
