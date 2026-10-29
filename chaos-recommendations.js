@@ -339,7 +339,7 @@
   document.head.appendChild(interactionStyle);
 
   const STOPWORDS = new Set(["the"]);
-  const imageCacheKey = "ne_chaos_fake_poster_cache_v4_full_title";
+  const imageCacheKey = "ne_chaos_fake_poster_cache_v5_safe_titles";
   const creditsCacheKey = "ne_chaos_movie_credits_cache_v5";
   const gifCacheKey = "ne_chaos_top_gif_cache_v1";
   const referenceImageCacheKey = "ne_chaos_reference_image_cache_v1";
@@ -368,6 +368,35 @@
 
     const phrase = String(title || "").trim();
     let url = "";
+
+    // "Get Out" is too generic for a raw Commons phrase search and can return
+    // unrelated/offensive imagery. Use the film page image instead.
+    if (key === "get out") {
+      try {
+        const params = new URLSearchParams({
+          action: "query",
+          titles: "Get Out",
+          prop: "pageimages",
+          piprop: "thumbnail",
+          pithumbsize: "500",
+          redirects: "1",
+          format: "json",
+          origin: "*"
+        });
+        const response = await fetch(`https://en.wikipedia.org/w/api.php?${params}`);
+        const data = await response.json();
+        const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
+        const page = pages.find(p => p?.thumbnail?.source);
+        url = page?.thumbnail?.source || "";
+      } catch (error) {
+        console.warn("Get Out film image lookup failed:", error);
+      }
+
+      cache[key] = url;
+      writeCache(imageCacheKey, cache);
+      return url;
+    }
+
     try {
       const params = new URLSearchParams({
         action:"query", generator:"search", gsrsearch:phrase, gsrnamespace:"6",
