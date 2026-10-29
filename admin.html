@@ -258,11 +258,11 @@
               <button id="cancelBtn" class="admin-secondary" type="button">CANCEL SCREENING</button>
               <button id="finalizeVotingBtn" class="primary-btn" type="button">FINALISE VOTING / SET WINNER</button>
               <button id="markPastBtn" class="admin-secondary" type="button">MARK WATCHED</button>
-              <button id="finalizeNightBtn" class="admin-secondary" type="button">END NIGHT / ARCHIVE SCREENING</button>
+              <button id="finalizeNightBtn" class="admin-secondary" type="button">⚠ END NIGHT / ARCHIVE AFTER SCREENING</button>
             </div>
             <div id="cancelStatus" class="admin-note"></div>
           </form>
-          <p class="admin-note">&gt; Voting lock executes automatically 48 hours before screening.</p>
+          <p class="admin-note">&gt; Voting closes automatically 2 hours before screening.</p>
           <p class="admin-note">&gt; FINALISE VOTING / SET WINNER locks in the current top-voted recommendation as the Now Showing film. It does NOT archive the screening or clear votes.</p>
           <p class="admin-note">&gt; END NIGHT / ARCHIVE SCREENING is destructive: it closes ratings, archives the film, creates the next fortnightly screening and starts the next voting round.</p>
         </section>
@@ -298,7 +298,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script src="./admin.js?v=20260909-matrix2"></script>
+  <script src="./admin.js?v=20261029-safe-finalise2"></script>
   <script src="./admin-usernames.js?v=20260909-2"></script>
 
   <script>
