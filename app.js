@@ -30,7 +30,7 @@
         id: "s1",
         title: "TBC",
         curator: "",
-        screening_at: "2026-10-29T19:00:00",
+        screening_at: "2026-11-19T20:00:00",
         runtime: "",
         year: null,
         note: "",
