@@ -778,7 +778,7 @@
     cache[key]=result; writeCache(creditsCacheKey,cache); return result;
   }
 
-  const factsCacheKey = "ne_chaos_pile_facts_v3_goofs";
+  const factsCacheKey = "ne_chaos_pile_facts_v4_curated_goofs";
 
   function triviaKey(title) {
     return String(title || "")
@@ -818,7 +818,13 @@
       "The cat in Don Corleone's opening scene was a stray Francis Ford Coppola found on the studio lot. Its purring was loud enough to interfere with Marlon Brando's dialogue.",
 
     "godfather":
-      "The cat in Don Corleone's opening scene was a stray Francis Ford Coppola found on the studio lot. Its purring was loud enough to interfere with Marlon Brando's dialogue."
+      "The cat in Don Corleone's opening scene was a stray Francis Ford Coppola found on the studio lot. Its purring was loud enough to interfere with Marlon Brando's dialogue.",
+
+    "the thing":
+      "GOOF: Childs hacks a huge hole in a door with an axe, but when the same door appears later the damage has shrunk to a much smaller hole in a different spot. | GOOF: The Norwegian is shown pulling the same grenade from the same box twice in two separate shots near the start. | GOOF: Near the finale, a crew member's boom-mic shadow is visible on the ground behind MacReady.",
+
+    "thing":
+      "GOOF: Childs hacks a huge hole in a door with an axe, but when the same door appears later the damage has shrunk to a much smaller hole in a different spot. | GOOF: The Norwegian is shown pulling the same grenade from the same box twice in two separate shots near the start. | GOOF: Near the finale, a crew member's boom-mic shadow is visible on the ground behind MacReady."
   };
 
   async function wikipediaFullExtract(pageTitle) {
@@ -1005,7 +1011,15 @@
       const picked = interestingSentences(extract, directFact ? 2 : 3);
 
       const facts = [];
-      if (directFact) facts.push({ kind: "WEIRD FACT", text: directFact });
+      if (directFact) {
+        String(directFact).split("|").map(x => x.trim()).filter(Boolean).forEach(text => {
+          const isGoof = /^goof:/i.test(text);
+          facts.push({
+            kind: isGoof ? "GOOF / ODDITY" : "WEIRD FACT",
+            text: text.replace(/^goof:\s*/i, "")
+          });
+        });
+      }
 
       for (const item of picked) {
         facts.push({
