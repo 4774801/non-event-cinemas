@@ -778,7 +778,7 @@
     cache[key]=result; writeCache(creditsCacheKey,cache); return result;
   }
 
-  const factsCacheKey = "ne_chaos_pile_facts_v2";
+  const factsCacheKey = "ne_chaos_pile_facts_v3_goofs";
 
   function triviaKey(title) {
     return String(title || "")
@@ -853,19 +853,51 @@
     return extract;
   }
 
-  function interestingSentence(text) {
+  function interestingSentences(text, limit = 3) {
     const sentences = String(text || "")
       .replace(/\n+/g, " ")
       .split(/(?<=[.!?])\s+/)
       .map(s => s.trim())
-      .filter(s => s.length >= 55 && s.length <= 260);
+      .filter(s => s.length >= 45 && s.length <= 300);
 
-    const weights = [
-      ["improvis", 10],
-      ["originally", 9],
-      ["cameo", 9],
-      ["recorded together", 10],
-      ["replaced", 8],
+    const goofWeights = [
+      ["continuity", 28],
+      ["continuity error", 34],
+      ["mistake", 28],
+      ["error", 22],
+      ["goof", 34],
+      ["accidentally", 24],
+      ["accidental", 22],
+      ["visible", 18],
+      ["crew member", 30],
+      ["crew members", 30],
+      ["camera", 14],
+      ["equipment", 20],
+      ["reflection", 22],
+      ["reflected", 22],
+      ["anachron", 30],
+      ["inconsisten", 24],
+      ["incorrect", 22],
+      ["wrong", 18],
+      ["prop", 15],
+      ["costume", 14],
+      ["disappear", 18],
+      ["changes between", 30],
+      ["changes from", 16],
+      ["in one shot", 28],
+      ["in the next shot", 32],
+      ["between shots", 34],
+      ["background", 8],
+      ["unintentionally", 24],
+      ["unintentional", 24]
+    ];
+
+    const triviaWeights = [
+      ["improvis", 12],
+      ["originally", 10],
+      ["cameo", 10],
+      ["recorded together", 12],
+      ["replaced", 9],
       ["computer animation", 9],
       ["cgi", 9],
       ["filmed", 7],
@@ -874,30 +906,53 @@
       ["sequel", 8],
       ["cancelled", 8],
       ["inspired", 7],
+      ["injured", 12],
+      ["broke", 9],
+      ["stunt", 10],
       ["studio", 4],
       ["animation", 5],
       ["location", 5],
-      ["box office", 5],
-      ["budget", 5],
-      ["award", 4],
-      ["cast", 3]
+      ["budget", 4]
     ];
 
     const scored = sentences.map((sentence, index) => {
       const lower = sentence.toLowerCase();
-      let score = index < 3 ? -7 : 0;
+      let goofScore = 0;
+      let triviaScore = index < 3 ? -7 : 0;
 
-      for (const [needle, weight] of weights) {
-        if (lower.includes(needle)) score += weight;
+      for (const [needle, weight] of goofWeights) {
+        if (lower.includes(needle)) goofScore += weight;
+      }
+      for (const [needle, weight] of triviaWeights) {
+        if (lower.includes(needle)) triviaScore += weight;
       }
 
-      if (/ is a \d{4} .*film/.test(lower)) score -= 12;
-      if (/directed by|stars .* as /.test(lower)) score -= 5;
+      if (/ is a \d{4} .*film/.test(lower)) triviaScore -= 15;
+      if (/directed by|stars .* as /.test(lower)) triviaScore -= 8;
+      if (/award|box office|grossed|critical response/.test(lower)) triviaScore -= 8;
 
-      return { sentence, score };
-    }).sort((a, b) => b.score - a.score);
+      return {
+        sentence,
+        goofScore,
+        score: goofScore > 0 ? 100 + goofScore : triviaScore
+      };
+    })
+    .filter(x => x.score > 1)
+    .sort((a, b) => b.score - a.score);
 
-    return scored[0]?.score > 1 ? scored[0].sentence : "";
+    const picked = [];
+    for (const item of scored) {
+      const normalized = item.sentence.toLowerCase().replace(/[^a-z0-9]+/g, " ");
+      if (picked.some(x => {
+        const other = x.sentence.toLowerCase().replace(/[^a-z0-9]+/g, " ");
+        return normalized.includes(other.slice(0, 45)) || other.includes(normalized.slice(0, 45));
+      })) continue;
+
+      picked.push(item);
+      if (picked.length >= limit) break;
+    }
+
+    return picked;
   }
 
   function shortenFact(text, max = 230) {
@@ -917,7 +972,7 @@
 
     panel = document.createElement("div");
     panel.className = "pile-facts";
-    panel.innerHTML = `<div class="pile-facts-title">★ ACTUALLY INTERESTING PILE FACTS ★</div><div class="pile-facts-body">SEARCHING THE INTERNET FOR SOMETHING ACTUALLY INTERESTING...</div>`;
+    panel.innerHTML = `<div class="pile-facts-title">★ GOOFS + ACTUALLY INTERESTING FACTS ★</div><div class="pile-facts-body">SEARCHING THE INTERNET FOR SOMETHING ACTUALLY INTERESTING...</div>`;
     body.appendChild(panel);
     return panel;
   }
@@ -943,27 +998,39 @@
     const requestId = ++factsRequest;
     const facts = await Promise.all(titles.map(async title => {
       const directFact = curatedPileFacts[triviaKey(title)];
-      if (directFact) return { title, fact: directFact };
 
       const credits = await movieCredits(title);
       const matched = credits.matchedTitle || canonicalMovieTitle(title) || title;
       const extract = await wikipediaFullExtract(matched);
-      let fact = shortenFact(interestingSentence(extract));
+      const picked = interestingSentences(extract, directFact ? 2 : 3);
 
-      if (!fact) {
-        fact = credits.director
-          ? `No properly weird production fact found yet. ${credits.director} directed it — the database has been formally reprimanded.`
-          : "Wikipedia has somehow made this film boring. Complaint lodged.";
+      const facts = [];
+      if (directFact) facts.push({ kind: "WEIRD FACT", text: directFact });
+
+      for (const item of picked) {
+        facts.push({
+          kind: item.goofScore > 0 ? "GOOF / ODDITY" : "WEIRD FACT",
+          text: shortenFact(item.sentence)
+        });
       }
 
-      return { title, fact };
+      if (!facts.length) {
+        facts.push({
+          kind: "DATABASE FAILURE",
+          text: credits.director
+            ? `No decent goof found yet. ${credits.director} directed it — the internet has been formally reprimanded.`
+            : "The internet has somehow made this film boring. Complaint lodged."
+        });
+      }
+
+      return { title, facts: facts.slice(0, 3) };
     }));
 
     if (requestId !== factsRequest || !panel.isConnected) return;
-    panel.querySelector(".pile-facts-body").innerHTML = facts.map(({title, fact}) => `
+    panel.querySelector(".pile-facts-body").innerHTML = facts.map(({title, facts}) => `
       <div class="pile-fact">
         <strong>${escapeHtml(title)}</strong>
-        ${escapeHtml(fact)}
+        ${facts.map(item => `<div class="pile-fact-detail"><span class="pile-fact-kind">${escapeHtml(item.kind)}</span> ${escapeHtml(item.text)}</div>`).join("")}
       </div>`).join("");
 
     updateMobileFactDisplay(true);
@@ -985,7 +1052,7 @@
 
     if (!isMobile || facts.length <= 1) {
       facts.forEach(fact => fact.classList.remove("mobile-active"));
-      if (title) title.textContent = "★ ACTUALLY INTERESTING PILE FACTS ★";
+      if (title) title.textContent = "★ GOOFS + ACTUALLY INTERESTING FACTS ★";
       return;
     }
 
