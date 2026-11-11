@@ -8,7 +8,7 @@
   const demoDefault = {
     id: "s1",
     title: "TBC",
-    screening_at: "2026-10-01T19:30:00",
+    screening_at: "2026-11-19T20:00:00",
     runtime: "",
     year: null,
     curator: "",
@@ -413,7 +413,7 @@
       nextDate = new Date(all[all.length-1].screening_at);
       nextDate.setDate(nextDate.getDate() + 14);
     } else {
-      nextDate = new Date("2026-10-01T19:30:00");
+      nextDate = new Date("2026-11-19T20:00:00");
     }
     const row = {
       id: isShared ? null : crypto.randomUUID(),
