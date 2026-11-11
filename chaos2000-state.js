@@ -11,8 +11,8 @@
     That was overwriting a genuinely selected upcoming film.
   */
 
-  const DOORS_LABEL = "6:30 PM";
-  const START_LABEL = "7:00 PM";
+  const DOORS_LABEL = "7:30 PM";
+  const START_LABEL = "8:00 PM";
 
   const $ = (sel) => document.querySelector(sel);
 
