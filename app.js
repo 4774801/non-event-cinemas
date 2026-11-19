@@ -404,9 +404,10 @@
     const start = new Date(screening?.screening_at || 0);
     if (Number.isNaN(start.getTime())) return null;
 
-    // Ratings open one hour after the scheduled film start.
-    // A 7:00 PM screening therefore opens at 8:00 PM.
-    return new Date(start.getTime() + 60 * 60 * 1000);
+    // Once a real film has been confirmed, ratings open at the scheduled
+    // film start time rather than waiting an extra hour.
+    if (isUndecidedScreening(screening)) return null;
+    return start;
   }
 
   function londonDateKey(value) {
@@ -424,10 +425,10 @@
 
   function ratingsAreOpen(screening) {
     const unlock = ratingUnlockTime(screening);
-    if (!unlock || screening?.is_past) return false;
+    if (!unlock || screening?.is_past || isUndecidedScreening(screening)) return false;
 
-    // Ratings are available only on the screening's UK calendar date:
-    // one hour after the film starts until midnight.
+    // Confirmed films can be rated from the scheduled start time until
+    // midnight on the screening's UK calendar date.
     return (
       Date.now() >= unlock.getTime() &&
       londonDateKey(new Date()) === londonDateKey(screening.screening_at)
