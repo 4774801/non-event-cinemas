@@ -140,10 +140,35 @@
   }
 
   function runtimeMinutes(runtime) {
-    if (!runtime) return 0;
-    const h = Number((runtime.match(/(\d+)\s*h/i) || [0,0])[1]);
-    const m = Number((runtime.match(/(\d+)\s*m/i) || [0,0])[1]);
-    return h * 60 + m;
+    if (runtime === null || runtime === undefined || runtime === "") return 0;
+
+    // Accept database values such as 104, "104", "104 min", "104m",
+    // "1h 44m", "1 hr 44 mins", etc.
+    if (typeof runtime === "number" && Number.isFinite(runtime)) {
+      return Math.max(0, Math.round(runtime));
+    }
+
+    const raw = String(runtime).trim().toLowerCase();
+    if (!raw) return 0;
+
+    if (/^\d+(?:\.\d+)?$/.test(raw)) {
+      return Math.max(0, Math.round(Number(raw)));
+    }
+
+    const hourMatch = raw.match(/(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours)\b/i);
+    const minuteMatch = raw.match(/(\d+(?:\.\d+)?)\s*(?:m|min|mins|minute|minutes)\b/i);
+
+    let total = 0;
+    if (hourMatch) total += Number(hourMatch[1]) * 60;
+    if (minuteMatch) total += Number(minuteMatch[1]);
+
+    // Last-resort format: "1:44" means 1 hour 44 minutes.
+    if (!total) {
+      const clock = raw.match(/^(\d{1,2}):(\d{1,2})$/);
+      if (clock) total = Number(clock[1]) * 60 + Number(clock[2]);
+    }
+
+    return Number.isFinite(total) ? Math.max(0, Math.round(total)) : 0;
   }
 
   function formatWatchTime(minutes) {
