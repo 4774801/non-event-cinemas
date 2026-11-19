@@ -99,11 +99,39 @@
     });
   }
 
+  async function lookupFilmImageFallback(title, year) {
+    if (!title) return "";
+    try {
+      const query = `${title}${year ? ` ${year}` : ""} movie`;
+      const params = new URLSearchParams({
+        action: "query",
+        generator: "search",
+        gsrsearch: query,
+        gsrlimit: "5",
+        prop: "pageimages",
+        piprop: "thumbnail",
+        pithumbsize: "900",
+        format: "json",
+        origin: "*"
+      });
+      const response = await fetch(`https://en.wikipedia.org/w/api.php?${params.toString()}`);
+      const data = await response.json();
+      const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
+      const page = pages.find(p => p?.thumbnail?.source);
+      return await validateImageUrl(page?.thumbnail?.source || "");
+    } catch (error) {
+      console.warn("Fallback film image lookup failed:", error);
+      return "";
+    }
+  }
+
   async function lookupPoster(title, year) {
     if (!title) return "";
     const cache = readPosterCache();
     const cacheId = `${String(title).toLowerCase()}|${year || ""}`;
-    if (Object.prototype.hasOwnProperty.call(cache, cacheId)) return cache[cacheId];
+    if (Object.prototype.hasOwnProperty.call(cache, cacheId) && cache[cacheId]) {
+      return cache[cacheId];
+    }
 
     let poster = "";
 
@@ -151,8 +179,13 @@
     }
 
     poster = await validateImageUrl(poster);
-    cache[cacheId] = poster;
-    localStorage.setItem(posterCacheKey, JSON.stringify(cache));
+    if (poster) {
+      cache[cacheId] = poster;
+      localStorage.setItem(posterCacheKey, JSON.stringify(cache));
+    } else if (Object.prototype.hasOwnProperty.call(cache, cacheId)) {
+      delete cache[cacheId];
+      localStorage.setItem(posterCacheKey, JSON.stringify(cache));
+    }
     return poster;
   }
 
@@ -488,7 +521,10 @@
 
           if (winner) {
             const winnerTitle = normaliseMovieTitleCase(winner.title);
-            const winnerPoster = await validateImageUrl(winner.poster_url) || await lookupPoster(winnerTitle, winner.year);
+            const winnerPoster =
+              await validateImageUrl(winner.poster_url) ||
+              await lookupPoster(winnerTitle, winner.year) ||
+              await lookupFilmImageFallback(winnerTitle, winner.year);
             return `
               <article class="screening-card">
                 <div class="poster">
@@ -537,7 +573,10 @@
 
       const going = rsvps.filter(r => String(r.screening_id) === String(s.id) && r.status === "going");
       const mine = rsvps.find(r => String(r.screening_id) === String(s.id) && r.user_name === user);
-      const posterUrl = await validateImageUrl(s.poster_url) || await lookupPoster(s.title, s.year);
+      const posterUrl =
+        await validateImageUrl(s.poster_url) ||
+        await lookupPoster(s.title, s.year) ||
+        await lookupFilmImageFallback(s.title, s.year);
       const poster = posterUrl
         ? `<img src="${esc(posterUrl)}" alt="${esc(s.title)} poster" onerror="this.remove(); this.parentElement.insertAdjacentHTML('beforeend','<div class=&quot;poster-fallback&quot;><small>NON EVENT PRESENTS</small><strong>${esc(s.title)}</strong></div>')">`
         : `<div class="poster-fallback"><small>NON EVENT PRESENTS</small><strong>${esc(s.title)}</strong></div>`;
