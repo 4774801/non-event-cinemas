@@ -487,12 +487,14 @@
           const winner = recs[0] || null;
 
           if (winner) {
+            const winnerTitle = normaliseMovieTitleCase(winner.title);
+            const winnerPoster = await validateImageUrl(winner.poster_url) || await lookupPoster(winnerTitle, winner.year);
             return `
               <article class="screening-card">
                 <div class="poster">
-                  ${winner.poster_url
-                    ? `<img src="${esc(winner.poster_url)}" alt="${esc(normaliseMovieTitleCase(winner.title))} poster" onerror="this.remove()">`
-                    : `<div class="poster-fallback"><small>TOP VOTED FILM</small><strong>${esc(normaliseMovieTitleCase(winner.title))}</strong></div>`
+                  ${winnerPoster
+                    ? `<img src="${esc(winnerPoster)}" alt="${esc(winnerTitle)} poster" onerror="this.remove(); this.parentElement.insertAdjacentHTML('beforeend','<div class=&quot;poster-fallback&quot;><small>TOP VOTED FILM</small><strong>${esc(winnerTitle)}</strong></div>')">`
+                    : `<div class="poster-fallback"><small>TOP VOTED FILM</small><strong>${esc(winnerTitle)}</strong></div>`
                   }
                 </div>
                 <div class="screening-info">
