@@ -153,6 +153,12 @@
 
     if (!isShared) {
       await markPast(id);
+
+      // End the local recommendation round as well.
+      const rows = read("recommendations", []);
+      write("recommendations", rows.map(r =>
+        r.is_active === false ? r : { ...r, is_active: false, votes: 0, voters: [] }
+      ));
       return;
     }
 
@@ -161,6 +167,33 @@
     });
 
     if (error) throw error;
+
+    // The screening RPC historically did not always clean up recommendation
+    // rows. Explicitly end the finished round here so old suggestions cannot
+    // carry into the next screening.
+    const { data: activeRows, error: activeError } = await sb
+      .from("recommendations")
+      .select("id")
+      .eq("is_active", true);
+
+    if (activeError) throw activeError;
+
+    const activeIds = (activeRows || []).map(r => r.id);
+
+    if (activeIds.length) {
+      const { error: voteDeleteError } = await sb
+        .from("recommendation_votes")
+        .delete()
+        .in("recommendation_id", activeIds);
+      if (voteDeleteError) throw voteDeleteError;
+
+      const { error: recCloseError } = await sb
+        .from("recommendations")
+        .update({ is_active: false, votes: 0 })
+        .in("id", activeIds);
+      if (recCloseError) throw recCloseError;
+    }
+
     return data;
   }
 
