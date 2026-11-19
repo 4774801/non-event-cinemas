@@ -821,6 +821,25 @@
     }
   }
 
+  async function latestCompletedScreeningTime() {
+    if (!isShared) return null;
+
+    const { data, error } = await sb
+      .from("screenings")
+      .select("screening_at")
+      .eq("is_past", true)
+      .order("screening_at", { ascending: false })
+      .limit(1);
+
+    if (error) {
+      console.warn("Could not resolve previous-round cutoff:", error);
+      return null;
+    }
+
+    const value = data?.[0]?.screening_at;
+    return value ? new Date(value) : null;
+  }
+
   async function getRecommendations() {
     if (!isShared) return read("recommendations", [
       { id: "r1", title: "Heat", reason: "Because we somehow still haven't done it.", user_name: "MG", votes: 2, voters: ["MG","KJ"], is_active: true },
@@ -836,8 +855,23 @@
 
     if (error) throw error;
 
-    const rows = data || [];
-    const namedVotes = await getNamedVoteRows(rows.map(row => row.id));
+    let rows = data || [];
+
+    // Once a screening is completed, recommendations from that finished
+    // round must not bleed into the next one. Hide anything submitted before
+    // the most recently completed screening time, even if an old DB row was
+    // accidentally left is_active=true.
+    const previousScreeningAt = await latestCompletedScreeningTime();
+    if (previousScreeningAt) {
+      rows = rows.filter(row => {
+        if (!row.created_at) return false;
+        return new Date(row.created_at).getTime() > previousScreeningAt.getTime();
+      });
+    }
+
+    const namedVotes = rows.length
+      ? await getNamedVoteRows(rows.map(row => row.id))
+      : [];
     const byRecommendation = new Map();
 
     for (const vote of namedVotes) {
