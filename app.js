@@ -887,6 +887,41 @@
     }));
   }
 
+  async function clearStaleActiveRecommendationForUser(userName) {
+    if (!isShared || !userName) return;
+
+    const previousScreeningAt = await latestCompletedScreeningTime();
+    if (!previousScreeningAt) return;
+
+    const { data, error } = await sb
+      .from("recommendations")
+      .select("id,created_at,user_name,is_active")
+      .eq("is_active", true)
+      .ilike("user_name", userName);
+
+    if (error) throw error;
+
+    const stale = (data || []).filter(row => {
+      if (!row.created_at) return true;
+      return new Date(row.created_at).getTime() <= previousScreeningAt.getTime();
+    });
+
+    const staleIds = stale.map(row => row.id);
+    if (!staleIds.length) return;
+
+    const { error: voteDeleteError } = await sb
+      .from("recommendation_votes")
+      .delete()
+      .in("recommendation_id", staleIds);
+    if (voteDeleteError) throw voteDeleteError;
+
+    const { error: closeError } = await sb
+      .from("recommendations")
+      .update({ is_active: false, votes: 0 })
+      .in("id", staleIds);
+    if (closeError) throw closeError;
+  }
+
   async function addRecommendation(title, reason, posterUrl) {
     if (!requireUser("recommend")) return false;
 
@@ -894,6 +929,10 @@
     if (!voting.open) {
       showToast("Voting is closed for the next screening.");
       return false;
+    }
+
+    if (isShared) {
+      await clearStaleActiveRecommendationForUser(user);
     }
 
     const activeRows = await getRecommendations();
@@ -922,7 +961,7 @@
       return true;
     }
 
-    const { data: inserted, error } = await sb
+    let { data: inserted, error } = await sb
       .from("recommendations")
       .insert({
         title,
@@ -936,10 +975,34 @@
 
     if (error) {
       if (error.code === "23505") {
-        showToast("You already have an active recommendation.");
-        return false;
+        // A legacy active row may still exist even if it is no longer visible.
+        // Clean stale rows and retry once before telling the user they already
+        // have a current-round suggestion.
+        await clearStaleActiveRecommendationForUser(user);
+
+        const retry = await sb
+          .from("recommendations")
+          .insert({
+            title,
+            reason,
+            poster_url: posterUrl || null,
+            user_name: user,
+            is_active: true
+          })
+          .select("id,votes")
+          .single();
+
+        if (!retry.error) {
+          inserted = retry.data;
+        } else if (retry.error.code === "23505") {
+          showToast("You already have an active recommendation.");
+          return false;
+        } else {
+          throw retry.error;
+        }
+      } else {
+        throw error;
       }
-      throw error;
     }
 
     if (inserted?.id) {
