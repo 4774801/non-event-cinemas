@@ -309,7 +309,8 @@
         count,
         rate: archive.length ? Math.round((count / archive.length) * 100) : 0
       }))
-      .sort((a,b) => b.count - a.count || a.name.localeCompare(b.name));
+      .sort((a,b) => b.count - a.count || a.name.localeCompare(b.name))
+      .slice(0, 5);
 
     let lastCount = null;
     let lastRank = 0;
