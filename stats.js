@@ -139,6 +139,109 @@
     return { archive, rsvps: rsvpRes.data || [], ratings: ratingRes.data || [] };
   }
 
+  const runtimeCacheKey = key("runtime_cache_v1");
+
+  function readRuntimeCache() {
+    try { return JSON.parse(localStorage.getItem(runtimeCacheKey)) || {}; }
+    catch { return {}; }
+  }
+
+  function writeRuntimeCache(cache) {
+    try { localStorage.setItem(runtimeCacheKey, JSON.stringify(cache)); } catch {}
+  }
+
+  async function lookupRuntimeMinutes(title, year) {
+    if (!title) return 0;
+
+    const cache = readRuntimeCache();
+    const cacheId = `${String(title).toLowerCase()}|${year || ""}`;
+    if (Number(cache[cacheId]) > 0) return Number(cache[cacheId]);
+
+    let minutes = 0;
+
+    // First choice: OMDb, if configured. Its Runtime field is usually
+    // returned as e.g. "109 min".
+    if (cfg.OMDB_API_KEY) {
+      try {
+        const params = new URLSearchParams({
+          apikey: cfg.OMDB_API_KEY,
+          t: title,
+          type: "movie"
+        });
+        if (year) params.set("y", String(year));
+
+        const response = await fetch(`https://www.omdbapi.com/?${params.toString()}`);
+        const data = await response.json();
+        const match = String(data?.Runtime || "").match(/(\d+)\s*min/i);
+        if (data?.Response === "True" && match) {
+          minutes = Number(match[1]) || 0;
+        }
+      } catch (error) {
+        console.warn("OMDb runtime lookup failed:", error);
+      }
+    }
+
+    // No API key or no OMDb result: resolve the film's Wikidata item from
+    // Wikipedia and use Wikidata duration (P2047), which is stored in minutes.
+    if (!minutes) {
+      try {
+        const query = `${title}${year ? ` ${year}` : ""} film`;
+        const params = new URLSearchParams({
+          action: "query",
+          generator: "search",
+          gsrsearch: query,
+          gsrlimit: "5",
+          prop: "pageprops",
+          ppprop: "wikibase_item",
+          format: "json",
+          origin: "*"
+        });
+
+        const response = await fetch(`https://en.wikipedia.org/w/api.php?${params.toString()}`);
+        const data = await response.json();
+        const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
+        const qid = pages.map(p => p?.pageprops?.wikibase_item).find(Boolean);
+
+        if (qid) {
+          const entityResponse = await fetch(
+            `https://www.wikidata.org/wiki/Special:EntityData/${encodeURIComponent(qid)}.json`
+          );
+          const entityData = await entityResponse.json();
+          const claims = entityData?.entities?.[qid]?.claims?.P2047 || [];
+
+          for (const claim of claims) {
+            const amount = claim?.mainsnak?.datavalue?.value?.amount;
+            const numeric = Number(amount);
+            if (Number.isFinite(numeric) && numeric > 0) {
+              minutes = Math.round(numeric);
+              break;
+            }
+          }
+        }
+      } catch (error) {
+        console.warn("Wikidata runtime lookup failed:", error);
+      }
+    }
+
+    if (minutes > 0) {
+      cache[cacheId] = minutes;
+      writeRuntimeCache(cache);
+    }
+
+    return minutes;
+  }
+
+  async function fillMissingRuntimes(archive) {
+    return Promise.all((archive || []).map(async film => {
+      if (runtimeMinutes(film.runtime) > 0) return film;
+
+      const minutes = await lookupRuntimeMinutes(film.title, film.year);
+      return minutes > 0
+        ? { ...film, runtime: `${minutes} min`, _runtimeAuto: true }
+        : film;
+    }));
+  }
+
   function runtimeMinutes(runtime) {
     if (runtime === null || runtime === undefined || runtime === "") return 0;
 
@@ -415,7 +518,8 @@
 
   async function render() {
     try {
-      const { archive, rsvps, ratings } = await loadData();
+      const { archive: rawArchive, rsvps, ratings } = await loadData();
+      const archive = await fillMissingRuntimes(rawArchive);
       const films = filmStats(archive, ratings, rsvps);
       renderAttendance(archive, rsvps);
       renderRecords(archive, films, ratings, rsvps);
